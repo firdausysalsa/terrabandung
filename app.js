@@ -6,6 +6,7 @@ let weatherById = {};
 let chartInstance = null;
 
 let selectedKecId = 'cidadap';
+let activeStatusFilter = 'all';
 
 // Jam WIB Live
 setInterval(() => {
@@ -49,14 +50,23 @@ function initMap() {
   refreshAllData();
 }
 
-// Kembalikan tampilan peta ke seluruh Kota Bandung (Semua 30 Wilayah)
-function resetMapView() {
-  if (!map) return;
-  if (polygonLayer.getLayers().length > 0) {
-    map.fitBounds(polygonLayer.getBounds(), { padding: [30, 30], maxZoom: 12 });
-  } else {
-    map.setView([-6.912, 107.642], 12);
-  }
+// Pilih satu kecamatan secara acak
+function pickRandomKecamatan() {
+  const candidates = kecamatanBandungList.filter(k => k.id !== selectedKecId);
+  const pool = candidates.length ? candidates : kecamatanBandungList;
+  const chosen = pool[Math.floor(Math.random() * pool.length)];
+  selectKecamatan(chosen.id, true);
+}
+
+// Filter tampilan poligon berdasarkan kondisi cuaca
+function setStatusFilter(filterType) {
+  activeStatusFilter = filterType;
+  ['all', 'rain', 'safe'].forEach(t => {
+    const btn = document.getElementById(`filter-${t}`);
+    if (btn) btn.className = t === filterType ? 'pill-btn active' : 'pill-btn';
+  });
+  renderMapPolygons();
+  filterQuickList();
 }
 
 function setBasemap(type) {
@@ -178,6 +188,28 @@ function getWeatherStatus(kec) {
   };
 }
 
+function matchesActiveFilter(statusCode) {
+  if (activeStatusFilter === 'all') return true;
+  if (activeStatusFilter === 'rain') return statusCode === 'warn' || statusCode === 'alert';
+  if (activeStatusFilter === 'safe') return statusCode === 'safe';
+  return true;
+}
+
+function updateCityHighlights() {
+  let coldest = null;
+  let warmest = null;
+
+  kecamatanBandungList.forEach(kec => {
+    const w = weatherById[kec.id] || createFallbackWeather(kec);
+    const t = w.current.temperature_2m;
+    if (!coldest || t < coldest.temp) coldest = { name: kec.name, temp: t };
+    if (!warmest || t > warmest.temp) warmest = { name: kec.name, temp: t };
+  });
+
+  if (coldest) document.getElementById('hl-cool').innerHTML = `Terdingin: <strong>${coldest.name} (${coldest.temp}°C)</strong>`;
+  if (warmest) document.getElementById('hl-warm').innerHTML = `Terhangat: <strong>${warmest.name} (${warmest.temp}°C)</strong>`;
+}
+
 function getCurrentHourIndex(timeArray) {
   try {
     const jakartaNow = new Intl.DateTimeFormat('sv-SE', {
@@ -192,30 +224,25 @@ function getCurrentHourIndex(timeArray) {
   }
 }
 
-// 4. Render Poligon, Label Nama Wilayah, & Ringkasan Header
+// 4. Render Poligon & Label Nama Wilayah
 function renderMapPolygons() {
   polygonLayer.clearLayers();
   labelLayer.clearLayers();
-
-  let safeCount = 0, warnCount = 0, alertCount = 0;
 
   bandungKecamatanGeoJSON.features.forEach(feature => {
     const kec = feature.properties;
     const w = weatherById[kec.id] || createFallbackWeather(kec);
     const status = getWeatherStatus(kec);
     const isSel = kec.id === selectedKecId;
-
-    if (status.code === 'safe') safeCount++;
-    else if (status.code === 'warn') warnCount++;
-    else alertCount++;
+    const isFilteredOut = !matchesActiveFilter(status.code);
 
     const poly = L.geoJSON(feature, {
       style: {
         fillColor: status.color,
         weight: isSel ? 2.2 : 1,
-        opacity: isSel ? 0.9 : 0.55,
+        opacity: isFilteredOut ? 0.2 : (isSel ? 0.9 : 0.55),
         color: isSel ? '#0f172a' : '#475569',
-        fillOpacity: isSel ? 0.28 : 0.14
+        fillOpacity: isFilteredOut ? 0.03 : (isSel ? 0.28 : 0.14)
       }
     }).addTo(polygonLayer);
 
@@ -224,10 +251,10 @@ function renderMapPolygons() {
     });
     poly.on('mouseout', function () {
       this.setStyle({
-        fillOpacity: isSel ? 0.28 : 0.14,
+        fillOpacity: isFilteredOut ? 0.03 : (isSel ? 0.28 : 0.14),
         weight: isSel ? 2.2 : 1,
         color: isSel ? '#0f172a' : '#475569',
-        opacity: isSel ? 0.9 : 0.55
+        opacity: isFilteredOut ? 0.2 : (isSel ? 0.9 : 0.55)
       });
     });
 
@@ -241,15 +268,11 @@ function renderMapPolygons() {
 
     const textIcon = L.divIcon({
       className: '',
-      html: `<div class="kec-map-label">${kec.name}</div>`,
+      html: `<div class="kec-map-label" style="opacity:${isFilteredOut ? '0.35' : '1'};">${kec.name}</div>`,
       iconSize: [0, 0]
     });
     L.marker([kec.lat, kec.lng], { icon: textIcon, interactive: false }).addTo(labelLayer);
   });
-
-  document.getElementById('sum-safe').innerText = `${safeCount} Aman`;
-  document.getElementById('sum-warn').innerText = `${warnCount} Waspada`;
-  document.getElementById('sum-alert').innerText = `${alertCount} Siaga`;
 }
 
 // 5. Pilih Wilayah & Perbarui Panel Kanan
@@ -351,9 +374,11 @@ function filterQuickList() {
   const listEl = document.getElementById('quick-list');
   listEl.innerHTML = '';
 
-  const filtered = kecamatanBandungList.filter(k =>
-    k.name.toLowerCase().includes(query) || k.hotspot.toLowerCase().includes(query)
-  );
+  const filtered = kecamatanBandungList.filter(k => {
+    const status = getWeatherStatus(k);
+    const matchText = k.name.toLowerCase().includes(query) || k.hotspot.toLowerCase().includes(query);
+    return matchText && matchesActiveFilter(status.code);
+  });
 
   document.getElementById('kec-count').innerText = `${filtered.length} Wilayah`;
 
@@ -376,6 +401,7 @@ function filterQuickList() {
 
 async function refreshAllData() {
   const isLive = await fetchAllBandungWeather();
+  updateCityHighlights();
   filterQuickList();
   selectKecamatan(selectedKecId, false);
   const now = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
