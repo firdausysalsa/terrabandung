@@ -19,11 +19,17 @@
       overflow: hidden;
     }
 
-    /* Animasi Gradasi & Kilau Cahaya Header */
+    /* Animasi Gradasi & Kilau Cahaya */
     @keyframes headerGradientMove {
       0% { background-position: 0% 50%; }
       50% { background-position: 100% 50%; }
       100% { background-position: 0% 50%; }
+    }
+
+    @keyframes panelGradientMove {
+      0% { background-position: 0% 0%; }
+      50% { background-position: 100% 100%; }
+      100% { background-position: 0% 0%; }
     }
 
     @keyframes headerShimmer {
@@ -98,7 +104,7 @@
 
     .city-highlight {
       display: flex; align-items: center; gap: 10px;
-      background: rgba(255, 255, 255, 0.86);
+      background: rgba(255, 255, 255, 0.84);
       backdrop-filter: blur(8px);
       padding: 6px 15px; border-radius: 99px;
       border: 1px solid rgba(255, 255, 255, 0.9);
@@ -148,11 +154,14 @@
       z-index: 450; pointer-events: none;
     }
 
+    /* Kotak Melayang & Panel dengan Gradasi Bergerak */
     .panel-box {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(8px);
-      border: 1px solid #e2e8f0;
-      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+      background: linear-gradient(135deg, rgba(224, 242, 254, 0.92) 0%, rgba(207, 250, 254, 0.90) 45%, rgba(209, 250, 229, 0.92) 100%);
+      background-size: 260% 260%;
+      animation: panelGradientMove 11s ease-in-out infinite;
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.85);
+      box-shadow: 0 8px 26px rgba(2, 132, 199, 0.12);
     }
 
     #map-top-bar {
@@ -163,19 +172,19 @@
     .pill-group { padding: 3px; border-radius: 10px; display: flex; gap: 3px; }
     .pill-btn {
       border: none; cursor: pointer; font-size: 11.5px; font-weight: 600;
-      padding: 6px 11px; border-radius: 7px; color: #475569; background: transparent;
+      padding: 6px 11px; border-radius: 7px; color: #334155; background: transparent;
       pointer-events: auto; transition: 0.15s;
     }
-    .pill-btn:hover { color: #0f172a; background: #f1f5f9; }
-    .pill-btn.active { background: #0f172a; color: #ffffff; }
+    .pill-btn:hover { color: #0f172a; background: rgba(255, 255, 255, 0.65); }
+    .pill-btn.active { background: #0f172a; color: #ffffff; box-shadow: 0 2px 6px rgba(15, 23, 42, 0.18); }
     .pill-btn.active:hover { background: #0f172a; color: #ffffff; }
 
     .btn-random-kec {
-      cursor: pointer; font-size: 11.5px; font-weight: 600;
-      padding: 8px 12px; border-radius: 10px; color: #0284c7;
+      cursor: pointer; font-size: 11.5px; font-weight: 700;
+      padding: 8px 12px; border-radius: 10px; color: #0369a1;
       pointer-events: auto; transition: 0.15s;
     }
-    .btn-random-kec:hover { background: #f0f9ff; color: #0369a1; }
+    .btn-random-kec:hover { filter: brightness(1.03); transform: translateY(-1px); }
 
     .kec-map-label {
       font-size: 9.5px;
@@ -190,35 +199,63 @@
 
     #map-legend {
       position: absolute; bottom: 22px; left: 18px; z-index: 900;
-      padding: 13px 15px; border-radius: 12px; font-size: 11.5px; color: #1e293b;
+      padding: 13px 15px; border-radius: 12px; font-size: 11.5px; color: #0f172a;
     }
-    .legend-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; color: #475569; font-weight: 500; }
-    .dot { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+    .legend-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; color: #334155; font-weight: 600; }
+    .dot { width: 11px; height: 11px; border-radius: 3px; display: inline-block; box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
 
+    /* Panel Kanan dengan Latar Gradasi & Gelombang Bergerak */
     #detail-panel {
       position: absolute; top: 14px; right: 16px; bottom: 16px; width: 396px; max-width: 92vw;
-      z-index: 900; border-radius: 14px; display: flex; flex-direction: column; overflow: hidden;
+      z-index: 900; border-radius: 16px; display: flex; flex-direction: column; overflow: hidden;
+      background: linear-gradient(155deg, rgba(224, 242, 254, 0.94) 0%, rgba(207, 250, 254, 0.92) 38%, rgba(209, 250, 229, 0.94) 72%, rgba(186, 230, 253, 0.94) 100%);
+      background-size: 320% 320%;
+      animation: panelGradientMove 10s ease-in-out infinite;
+      border: 1.5px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 12px 32px rgba(2, 132, 199, 0.16);
     }
+
+    /* Canvas animasi awan & gelombang di belakang kartu-kartu panel kanan */
+    #panel-motion-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
     .panel-head {
+      position: relative;
+      z-index: 1;
       padding: 15px 17px;
-      background: linear-gradient(135deg, #f8fafc 0%, #f0f9ff 100%);
-      border-bottom: 1px solid #e2e8f0;
+      background: linear-gradient(120deg, rgba(186, 230, 253, 0.85) 0%, rgba(103, 232, 249, 0.58) 38%, rgba(110, 231, 183, 0.58) 72%, rgba(147, 197, 253, 0.82) 100%);
+      background-size: 300% 300%;
+      animation: headerGradientMove 8s ease-in-out infinite;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.85);
       flex-shrink: 0;
     }
     .panel-meta { display: flex; justify-content: space-between; align-items: center; font-size: 10.5px; }
     .badge-tag {
       padding: 3px 9px; border-radius: 6px; font-weight: 700;
-      background: #e2e8f0; color: #334155;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      color: #0f172a;
     }
     .title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }
-    #panel-title { font-size: 18.5px; font-weight: 800; color: #0f172a; }
+    #panel-title { font-size: 18.5px; font-weight: 800; color: #0f172a; text-shadow: 0 1px 0 rgba(255,255,255,0.6); }
     .sky-chip {
-      font-size: 11px; font-weight: 600; padding: 4px 9px; border-radius: 8px;
-      background: #ffffff; color: #334155; border: 1px solid #cbd5e1; white-space: nowrap;
+      font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 8px;
+      background: rgba(255, 255, 255, 0.86); color: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.95);
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+      white-space: nowrap;
     }
-    #panel-subtitle { font-size: 11.5px; color: #64748b; margin-top: 4px; }
+    #panel-subtitle { font-size: 11.5px; font-weight: 600; color: #334155; margin-top: 4px; }
 
     .panel-body {
+      position: relative;
+      z-index: 1;
       padding: 14px 16px;
       overflow-y: auto;
       overflow-x: hidden;
@@ -228,10 +265,16 @@
       flex-direction: column;
       gap: 11px;
     }
+
+    /* Kartu di dalam Panel Kanan: Gradasi Bergerak & Frosted Glass */
     .card {
-      padding: 12px 13px; border-radius: 11px;
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
+      padding: 12px 13px; border-radius: 12px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.78) 0%, rgba(224, 242, 254, 0.68) 50%, rgba(236, 253, 245, 0.75) 100%);
+      background-size: 250% 250%;
+      animation: panelGradientMove 12s ease-in-out infinite;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.88);
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.07);
       min-width: 0;
       max-width: 100%;
       overflow: hidden;
@@ -251,33 +294,47 @@
       display: block;
     }
 
-    .status-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 10px; color: #64748b; font-weight: 700; letter-spacing: 0.4px; }
+    .status-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 10px; color: #475569; font-weight: 700; letter-spacing: 0.4px; }
     .status-pill { padding: 3px 9px; border-radius: 6px; font-size: 10px; font-weight: 700; flex-shrink: 0; }
-    #status-advice { font-size: 12.5px; line-height: 1.5; color: #334155; }
+    #status-advice { font-size: 12.5px; line-height: 1.5; color: #1e293b; }
 
     .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; flex-shrink: 0; }
-    .kpi-card { padding: 11px 12px; border-radius: 10px; border: 1px solid #e2e8f0; background: #f8fafc; min-width: 0; }
-    .kpi-label { font-size: 11px; color: #64748b; font-weight: 600; display: block; margin-bottom: 3px; }
+    .kpi-card {
+      padding: 11px 12px; border-radius: 11px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.80) 0%, rgba(207, 250, 254, 0.62) 50%, rgba(209, 250, 229, 0.68) 100%);
+      background-size: 240% 240%;
+      animation: panelGradientMove 11s ease-in-out infinite;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 3px 10px rgba(2, 132, 199, 0.06);
+      min-width: 0;
+    }
+    .kpi-label { font-size: 11px; color: #475569; font-weight: 600; display: block; margin-bottom: 3px; }
     .kpi-val { font-size: 17px; font-weight: 800; color: #0f172a; }
 
     .search-input {
-      width: 100%; background: #f8fafc; border: 1px solid #cbd5e1;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid rgba(255, 255, 255, 0.95);
       color: #0f172a; padding: 8px 11px; border-radius: 8px; font-size: 12px; margin-bottom: 6px;
       outline: none;
     }
-    .search-input:focus { border-color: #0f172a; background: #ffffff; }
+    .search-input:focus { border-color: #0284c7; background: rgba(255, 255, 255, 0.96); }
 
     .quick-item {
-      padding: 8px 10px; border-radius: 9px; background: #f8fafc;
-      border: 1px solid #e2e8f0; cursor: pointer;
+      padding: 8px 10px; border-radius: 9px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      cursor: pointer;
       display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 6px;
+      transition: 0.15s;
     }
-    .quick-item:hover { background: #f1f5f9; border-color: #94a3b8; }
+    .quick-item:hover { background: rgba(255, 255, 255, 0.95); border-color: #38bdf8; transform: translateX(2px); }
 
     .empty-filter-box {
       margin-top: 6px; padding: 12px; border-radius: 9px;
-      background: #f8fafc; border: 1px dashed #cbd5e1;
-      text-align: center; font-size: 11.5px; color: #475569;
+      background: rgba(255, 255, 255, 0.75); border: 1px dashed #7dd3fc;
+      text-align: center; font-size: 11.5px; color: #334155;
     }
     .btn-reset-filter {
       margin-top: 8px; background: #0284c7; color: #ffffff;
@@ -287,17 +344,18 @@
     .btn-reset-filter:hover { background: #0369a1; }
 
     .credit-footer {
-      font-size: 10.5px; color: #64748b; text-align: center; padding-top: 4px; flex-shrink: 0;
+      font-size: 10.5px; color: #475569; text-align: center; padding-top: 4px; flex-shrink: 0; font-weight: 500;
     }
-    .credit-footer a { color: #0284c7; text-decoration: none; font-weight: 600; }
+    .credit-footer a { color: #0369a1; text-decoration: none; font-weight: 700; }
 
     .leaflet-tooltip {
-      background: #ffffff !important; color: #0f172a !important;
-      border: 1px solid #cbd5e1 !important; border-radius: 8px !important;
-      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.1) !important; padding: 6px 10px !important;
+      background: linear-gradient(135deg, rgba(255,255,255,0.96), rgba(224,242,254,0.96)) !important;
+      color: #0f172a !important;
+      border: 1px solid #bae6fd !important; border-radius: 8px !important;
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12) !important; padding: 6px 10px !important;
     }
     ::-webkit-scrollbar { width: 5px; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+    ::-webkit-scrollbar-thumb { background: rgba(2, 132, 199, 0.28); border-radius: 99px; }
   </style>
 </head>
 <body>
@@ -377,10 +435,12 @@
     </div>
 
     <aside id="detail-panel" class="panel-box">
+      <canvas id="panel-motion-canvas"></canvas>
+
       <div class="panel-head">
         <div class="panel-meta">
           <span id="panel-region-badge" class="badge-tag">KOTA BANDUNG • WILAYAH UTARA</span>
-          <span id="panel-elev" style="color:#334155; font-weight:700;">-- mdpl</span>
+          <span id="panel-elev" style="color:#0f172a; font-weight:800;">-- mdpl</span>
         </div>
         <div class="title-row">
           <h2 id="panel-title">Kec. Cidadap</h2>
@@ -443,60 +503,118 @@
     </aside>
   </div>
 
-  <!-- Animasi Gelombang & Awan Bergerak pada Header -->
+  <!-- Animasi Gelombang & Awan Bergerak pada Header dan Panel Kanan -->
   <script>
-    (function initHeaderMotion() {
-      const canvas = document.getElementById('header-motion-canvas');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      let w = 0, h = 0, phase = 0;
+    (function initAtmosphereAnimations() {
+      // 1. Animasi pada Header
+      const headerCanvas = document.getElementById('header-motion-canvas');
+      if (headerCanvas) {
+        const ctx = headerCanvas.getContext('2d');
+        let w = 0, h = 0, phase = 0;
 
-      const puffs = Array.from({ length: 10 }, (_, i) => ({
-        x: i * 160,
-        y: 12 + (i % 4) * 13,
-        r: 22 + (i % 3) * 12,
-        speed: 0.45 + (i % 3) * 0.22
-      }));
+        const puffs = Array.from({ length: 10 }, (_, i) => ({
+          x: i * 160,
+          y: 12 + (i % 4) * 13,
+          r: 22 + (i % 3) * 12,
+          speed: 0.45 + (i % 3) * 0.22
+        }));
 
-      function resizeHeaderCanvas() {
-        w = canvas.width = canvas.parentElement ? canvas.parentElement.clientWidth : window.innerWidth;
-        h = canvas.height = 64;
-      }
-      resizeHeaderCanvas();
-      window.addEventListener('resize', resizeHeaderCanvas);
-
-      function renderHeaderFrame() {
-        ctx.clearRect(0, 0, w, h);
-        phase += 0.025;
-
-        // Gelombang angin transparan mengalir di header
-        ctx.beginPath();
-        ctx.moveTo(0, h);
-        for (let x = 0; x <= w; x += 24) {
-          const y = 38 + Math.sin(x * 0.008 + phase) * 8 + Math.cos(x * 0.015 - phase * 0.7) * 4;
-          ctx.lineTo(x, y);
+        function resizeHeaderCanvas() {
+          w = headerCanvas.width = headerCanvas.parentElement ? headerCanvas.parentElement.clientWidth : window.innerWidth;
+          h = headerCanvas.height = 64;
         }
-        ctx.lineTo(w, h);
-        ctx.closePath();
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.24)';
-        ctx.fill();
+        resizeHeaderCanvas();
+        window.addEventListener('resize', resizeHeaderCanvas);
 
-        // Gumpalan cahaya/awan lembut bergerak
-        puffs.forEach(p => {
-          p.x += p.speed;
-          if (p.x - p.r > w + 30) p.x = -p.r - 30;
-          const g = ctx.createRadialGradient(p.x, p.y, 2, p.x, p.y, p.r);
-          g.addColorStop(0, 'rgba(255, 255, 255, 0.42)');
-          g.addColorStop(1, 'rgba(255, 255, 255, 0)');
-          ctx.fillStyle = g;
+        function renderHeaderFrame() {
+          ctx.clearRect(0, 0, w, h);
+          phase += 0.025;
+
           ctx.beginPath();
-          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.moveTo(0, h);
+          for (let x = 0; x <= w; x += 24) {
+            const y = 38 + Math.sin(x * 0.008 + phase) * 8 + Math.cos(x * 0.015 - phase * 0.7) * 4;
+            ctx.lineTo(x, y);
+          }
+          ctx.lineTo(w, h);
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.26)';
           ctx.fill();
-        });
 
-        requestAnimationFrame(renderHeaderFrame);
+          puffs.forEach(p => {
+            p.x += p.speed;
+            if (p.x - p.r > w + 30) p.x = -p.r - 30;
+            const g = ctx.createRadialGradient(p.x, p.y, 2, p.x, p.y, p.r);
+            g.addColorStop(0, 'rgba(255, 255, 255, 0.44)');
+            g.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = g;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fill();
+          });
+
+          requestAnimationFrame(renderHeaderFrame);
+        }
+        renderHeaderFrame();
       }
-      renderHeaderFrame();
+
+      // 2. Animasi pada Panel Kanan (#detail-panel)
+      const panelCanvas = document.getElementById('panel-motion-canvas');
+      if (panelCanvas) {
+        const pCtx = panelCanvas.getContext('2d');
+        let pw = 0, ph = 0, pPhase = 0;
+
+        const panelClouds = Array.from({ length: 7 }, (_, i) => ({
+          x: (i * 85) % 420,
+          y: 60 + i * 95,
+          r: 55 + (i % 3) * 28,
+          speed: 0.28 + (i % 3) * 0.14
+        }));
+
+        function resizePanelCanvas() {
+          const parent = panelCanvas.parentElement;
+          pw = panelCanvas.width = parent ? parent.clientWidth : 396;
+          ph = panelCanvas.height = parent ? parent.clientHeight : 700;
+        }
+        resizePanelCanvas();
+        window.addEventListener('resize', resizePanelCanvas);
+
+        function renderPanelFrame() {
+          pCtx.clearRect(0, 0, pw, ph);
+          pPhase += 0.02;
+
+          // Gelombang atmosfer lembut melintas di panel kanan
+          for (let layer = 0; layer < 2; layer++) {
+            pCtx.beginPath();
+            pCtx.moveTo(0, ph);
+            const baseY = ph * (0.35 + layer * 0.35);
+            for (let x = 0; x <= pw; x += 18) {
+              const y = baseY + Math.sin(x * 0.015 + pPhase + layer) * 16 + Math.cos(x * 0.022 - pPhase) * 8;
+              pCtx.lineTo(x, y);
+            }
+            pCtx.lineTo(pw, ph);
+            pCtx.closePath();
+            pCtx.fillStyle = layer === 0 ? 'rgba(255, 255, 255, 0.28)' : 'rgba(186, 230, 253, 0.25)';
+            pCtx.fill();
+          }
+
+          // Gumpalan cahaya & awan lembut melayang di belakang kartu
+          panelClouds.forEach(c => {
+            c.x += c.speed;
+            if (c.x - c.r > pw + 40) c.x = -c.r - 40;
+            const grad = pCtx.createRadialGradient(c.x, c.y, 4, c.x, c.y, c.r);
+            grad.addColorStop(0, 'rgba(255, 255, 255, 0.52)');
+            grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            pCtx.fillStyle = grad;
+            pCtx.beginPath();
+            pCtx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+            pCtx.fill();
+          });
+
+          requestAnimationFrame(renderPanelFrame);
+        }
+        renderPanelFrame();
+      }
     })();
   </script>
 
