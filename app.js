@@ -64,7 +64,7 @@ function setBasemap(type) {
   document.getElementById('base-minimal').className = type === 'minimal' ? 'pill-btn active' : 'pill-btn';
 }
 
-// 2. Ambil Data Open-Meteo (forecast_days=2 agar grafik 12 jam selalu mulai dari jam sekarang)
+// 2. Ambil Data Open-Meteo
 async function fetchAllBandungWeather() {
   const lats = kecamatanBandungList.map(k => k.lat).join(',');
   const lngs = kecamatanBandungList.map(k => k.lng).join(',');
@@ -134,7 +134,7 @@ function getWeatherStatus(kec) {
   };
 }
 
-// Cari indeks jam sekarang di waktu Jakarta (WIB)
+// Cari indeks jam sekarang di zona waktu Jakarta (WIB)
 function getCurrentHourIndex(timeArray) {
   try {
     const jakartaNow = new Intl.DateTimeFormat('sv-SE', {
@@ -222,7 +222,7 @@ function selectKecamatan(kecId, fly = true) {
 
   const radarIcon = L.divIcon({
     className: 'radar-pin',
-    html: `<div class="radar-ring" style="background:${status.color}; width:26px; height:26px;"></div><div style="background:${status.color}; width:11px; height:11px; border-radius:50%; border:2px solid #fff; box-shadow:0 2px 5px rgba(0,0,0,0.25);"></div>`,
+    html: `<div class="radar-ring" style="background:${status.color}; width:26px; height:26px;"></div><div style="background:${status.color}; width:11px; height:11px; border-radius:50%; border:2.5px solid #fff; box-shadow:0 2px 5px rgba(0,0,0,0.25);"></div>`,
     iconSize: [18, 18]
   });
   L.marker([kec.lat, kec.lng], { icon: radarIcon }).addTo(activeMarkerLayer);
