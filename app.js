@@ -1,12 +1,11 @@
 let map, basemaps = {}, activeBasemap;
-let polygonLayer = L.layerGroup();
+let polygonLayer = L.featureGroup();
 let labelLayer = L.layerGroup();
 let activeMarkerLayer = L.layerGroup();
 let weatherById = {};
 let chartInstance = null;
 
 let selectedKecId = 'cidadap';
-let currentWeatherEffect = 'mist';
 
 // Jam WIB Live
 setInterval(() => {
@@ -47,12 +46,17 @@ function initMap() {
     }
   });
 
-  initWeatherCanvas();
   refreshAllData();
 }
 
+// Kembalikan tampilan peta ke seluruh Kota Bandung (Semua 30 Wilayah)
 function resetMapView() {
-  if (map) map.flyTo([-6.912, 107.642], 12, { duration: 1.0 });
+  if (!map) return;
+  if (polygonLayer.getLayers().length > 0) {
+    map.fitBounds(polygonLayer.getBounds(), { padding: [30, 30], maxZoom: 12 });
+  } else {
+    map.setView([-6.912, 107.642], 12);
+  }
 }
 
 function setBasemap(type) {
@@ -65,7 +69,7 @@ function setBasemap(type) {
   document.getElementById('base-minimal').className = type === 'minimal' ? 'pill-btn active' : 'pill-btn';
 }
 
-// Data cadangan realistis berbasis elevasi jika Open-Meteo sedang lambat/limit
+// Data cadangan berbasis elevasi jika jaringan lambat
 function createFallbackWeather(kec) {
   const baseTemp = Number((26.5 - ((kec.elevation - 666) * 0.016)).toFixed(1));
   const now = new Date();
@@ -99,7 +103,7 @@ function createFallbackWeather(kec) {
   };
 }
 
-// 2. Ambil Data Open-Meteo dengan Penanganan Error Aman
+// 2. Ambil Data Open-Meteo
 async function fetchAllBandungWeather() {
   try {
     const lats = kecamatanBandungList.map(k => k.lat).join(',');
@@ -117,7 +121,6 @@ async function fetchAllBandungWeather() {
     });
     return true;
   } catch (err) {
-    console.warn('Menggunakan data simulasi elevasi Bandung karena koneksi API:', err);
     kecamatanBandungList.forEach(kec => {
       weatherById[kec.id] = createFallbackWeather(kec);
     });
@@ -125,7 +128,6 @@ async function fetchAllBandungWeather() {
   }
 }
 
-// Terjemahkan Kode Cuaca WMO Open-Meteo
 function describeSky(code) {
   if (code === 0) return '☀️ Cerah';
   if (code <= 2) return '⛅ Cerah Berawan';
@@ -153,8 +155,7 @@ function getWeatherStatus(kec) {
       color: '#ef4444',
       pillBg: '#fee2e2',
       pillColor: '#b91c1c',
-      advice: `Curah hujan tinggi di wilayah ${kec.name} (${kec.elevation} mdpl). Waspadai potensi genangan di sekitar ${kec.hotspot}.`,
-      fx: 'rain'
+      advice: `Curah hujan tinggi di wilayah ${kec.name} (${kec.elevation} mdpl). Waspadai potensi genangan di sekitar ${kec.hotspot}.`
     };
   }
   if (rain > 0.2 || prob >= 45) {
@@ -164,8 +165,7 @@ function getWeatherStatus(kec) {
       color: '#f59e0b',
       pillBg: '#fef3c7',
       pillColor: '#b45309',
-      advice: `Wilayah ${kec.name} berpotensi hujan ringan hingga sedang (peluang ${prob}%). Siapkan jas hujan bila melintasi ${kec.hotspot}.`,
-      fx: 'rain'
+      advice: `Wilayah ${kec.name} berpotensi hujan ringan hingga sedang (peluang ${prob}%). Siapkan jas hujan bila melintasi ${kec.hotspot}.`
     };
   }
   return {
@@ -174,12 +174,10 @@ function getWeatherStatus(kec) {
     color: '#10b981',
     pillBg: '#d1fae5',
     pillColor: '#047857',
-    advice: `Cuaca di wilayah ${kec.name} (${kec.elevation} mdpl) terpantau kondusif. Aktivitas luar ruang dan lalu lintas aman.`,
-    fx: 'mist'
+    advice: `Cuaca di wilayah ${kec.name} (${kec.elevation} mdpl) terpantau kondusif. Aktivitas luar ruang dan lalu lintas aman.`
   };
 }
 
-// Cari indeks jam sekarang di zona waktu Jakarta (WIB)
 function getCurrentHourIndex(timeArray) {
   try {
     const jakartaNow = new Intl.DateTimeFormat('sv-SE', {
@@ -216,19 +214,19 @@ function renderMapPolygons() {
         fillColor: status.color,
         weight: isSel ? 2.2 : 1,
         opacity: isSel ? 0.9 : 0.55,
-        color: isSel ? '#0284c7' : '#475569',
+        color: isSel ? '#0f172a' : '#475569',
         fillOpacity: isSel ? 0.28 : 0.14
       }
     }).addTo(polygonLayer);
 
     poly.on('mouseover', function () {
-      this.setStyle({ fillOpacity: 0.32, weight: 2, color: '#0284c7', opacity: 0.9 });
+      this.setStyle({ fillOpacity: 0.32, weight: 2, color: '#0f172a', opacity: 0.9 });
     });
     poly.on('mouseout', function () {
       this.setStyle({
         fillOpacity: isSel ? 0.28 : 0.14,
         weight: isSel ? 2.2 : 1,
-        color: isSel ? '#0284c7' : '#475569',
+        color: isSel ? '#0f172a' : '#475569',
         opacity: isSel ? 0.9 : 0.55
       });
     });
@@ -264,18 +262,16 @@ function selectKecamatan(kecId, fly = true) {
   renderMapPolygons();
   activeMarkerLayer.clearLayers();
 
-  const radarIcon = L.divIcon({
-    className: 'radar-pin',
-    html: `<div class="radar-ring" style="background:${status.color}; width:26px; height:26px;"></div><div style="background:${status.color}; width:11px; height:11px; border-radius:50%; border:2.5px solid #fff; box-shadow:0 2px 5px rgba(0,0,0,0.25);"></div>`,
-    iconSize: [18, 18]
+  const pinIcon = L.divIcon({
+    className: '',
+    html: `<div style="background:${status.color}; width:11px; height:11px; border-radius:50%; border:2px solid #fff; box-shadow:0 2px 5px rgba(0,0,0,0.35);"></div>`,
+    iconSize: [11, 11]
   });
-  L.marker([kec.lat, kec.lng], { icon: radarIcon }).addTo(activeMarkerLayer);
+  L.marker([kec.lat, kec.lng], { icon: pinIcon, interactive: false }).addTo(activeMarkerLayer);
 
   if (fly) {
-    map.flyTo([kec.lat, kec.lng], 13.5, { duration: 1.1 });
+    map.flyTo([kec.lat, kec.lng], 13.5, { duration: 0.9 });
   }
-
-  currentWeatherEffect = status.fx;
 
   document.getElementById('panel-region-badge').innerText = `KOTA BANDUNG • WILAYAH ${kec.wilayah.toUpperCase()}`;
   document.getElementById('panel-elev').innerText = `${kec.elevation} mdpl`;
@@ -318,12 +314,12 @@ function renderChart(name, hourly) {
           label: 'Suhu (°C)',
           data: hourly.temperature_2m.slice(startIdx, endIdx),
           borderColor: '#059669',
-          backgroundColor: 'rgba(16, 185, 129, 0.14)',
+          backgroundColor: 'rgba(16, 185, 129, 0.12)',
           yAxisID: 'y',
-          borderWidth: 2.5,
+          borderWidth: 2,
           pointRadius: 2.5,
           fill: true,
-          tension: 0.4
+          tension: 0.35
         },
         {
           label: 'Peluang Hujan (%)',
@@ -333,7 +329,7 @@ function renderChart(name, hourly) {
           borderWidth: 2,
           borderDash: [4, 4],
           pointRadius: 2.5,
-          tension: 0.4
+          tension: 0.35
         }
       ]
     },
@@ -378,66 +374,12 @@ function filterQuickList() {
   });
 }
 
-// 8. Animasi Partikel Cuaca Halus
-function initWeatherCanvas() {
-  const canvas = document.getElementById('weather-canvas');
-  const ctx = canvas.getContext('2d');
-  const particles = [];
-
-  function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight - 64;
-  }
-  window.addEventListener('resize', resize);
-  resize();
-
-  for (let i = 0; i < 60; i++) {
-    particles.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      speedY: 0.8 + Math.random() * 2.8,
-      speedX: -0.4 + Math.random() * 1.1,
-      size: 2 + Math.random() * 2.5,
-      alpha: 0.25 + Math.random() * 0.35
-    });
-  }
-
-  function animate() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    particles.forEach(p => {
-      if (currentWeatherEffect === 'rain') {
-        ctx.strokeStyle = `rgba(2, 132, 199, ${p.alpha + 0.15})`;
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(p.x, p.y);
-        ctx.lineTo(p.x - 3, p.y + 14);
-        ctx.stroke();
-        p.y += p.speedY * 2.5;
-        p.x -= 1.2;
-      } else {
-        ctx.fillStyle = `rgba(14, 165, 233, ${p.alpha})`;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-        p.x += p.speedX * 0.65;
-        p.y -= p.speedY * 0.22;
-      }
-      if (p.y > canvas.height) { p.y = -10; p.x = Math.random() * canvas.width; }
-      if (p.y < -10) { p.y = canvas.height + 10; p.x = Math.random() * canvas.width; }
-      if (p.x < 0) p.x = canvas.width;
-      if (p.x > canvas.width) p.x = 0;
-    });
-    requestAnimationFrame(animate);
-  }
-  animate();
-}
-
 async function refreshAllData() {
   const isLive = await fetchAllBandungWeather();
   filterQuickList();
   selectKecamatan(selectedKecId, false);
   const now = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-  document.getElementById('last-updated').innerText = isLive ? `Update: ${now} WIB` : `Mode Offline: ${now} WIB`;
+  document.getElementById('last-updated').innerText = isLive ? `Update: ${now} WIB` : `Data Elevasi: ${now} WIB`;
 }
 
 initMap();
