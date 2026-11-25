@@ -19,32 +19,67 @@
       overflow: hidden;
     }
 
-    @keyframes headerAurora {
+    /* Animasi Gradasi & Kilau Cahaya Header */
+    @keyframes headerGradientMove {
       0% { background-position: 0% 50%; }
       50% { background-position: 100% 50%; }
       100% { background-position: 0% 50%; }
     }
 
+    @keyframes headerShimmer {
+      0% { transform: translateX(-120%) skewX(-20deg); }
+      100% { transform: translateX(320%) skewX(-20deg); }
+    }
+
     header {
       position: fixed; top: 0; left: 0; right: 0; height: 64px;
-      background: linear-gradient(120deg, rgba(255,255,255,0.97), rgba(240,249,255,0.96), rgba(236,253,245,0.96), rgba(255,255,255,0.97));
-      background-size: 260% 260%;
-      animation: headerAurora 14s ease infinite;
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid #dbeafe;
+      background: linear-gradient(115deg, #bae6fd 0%, #67e8f9 25%, #6ee7b7 52%, #7dd3fc 78%, #93c5fd 100%);
+      background-size: 320% 320%;
+      animation: headerGradientMove 8s ease-in-out infinite;
+      border-bottom: 1px solid rgba(2, 132, 199, 0.25);
+      box-shadow: 0 4px 18px rgba(2, 132, 199, 0.12);
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 20px; z-index: 1000; gap: 12px;
+      overflow: hidden;
     }
+
+    /* Efek sapuan cahaya melintas lembut di header */
+    header::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 35%; height: 100%;
+      background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.38) 50%, rgba(255,255,255,0) 100%);
+      animation: headerShimmer 7s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Canvas animasi awan & gelombang angin di dalam header */
+    #header-motion-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .brand, .city-highlight, .right-bar {
+      position: relative;
+      z-index: 2;
+    }
+
     .brand { display: flex; align-items: center; gap: 11px; flex-shrink: 0; }
     .brand-icon {
       position: relative;
       width: 42px; height: 42px; border-radius: 12px;
-      background: #f8fafc;
-      border: 1.5px solid #bae6fd;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1.5px solid rgba(255, 255, 255, 0.95);
       display: flex; align-items: center; justify-content: center;
       overflow: hidden;
       flex-shrink: 0;
-      box-shadow: 0 3px 10px rgba(2, 132, 199, 0.14);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
     }
     .brand-icon img {
       position: absolute; inset: 0; z-index: 2;
@@ -53,33 +88,50 @@
     .brand-icon svg {
       width: 100%; height: 100%; display: block;
     }
-    .brand h1 { font-size: 17px; font-weight: 800; letter-spacing: -0.3px; color: #0f172a; line-height: 1.15; }
-    .brand h1 span { color: #0284c7; }
-    .brand p { font-size: 10.5px; color: #64748b; }
+    .brand h1 {
+      font-size: 17.5px; font-weight: 800; letter-spacing: -0.3px;
+      color: #0f172a; line-height: 1.15;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+    .brand h1 span { color: #0369a1; }
+    .brand p { font-size: 10.5px; font-weight: 600; color: #1e293b; opacity: 0.85; }
 
     .city-highlight {
       display: flex; align-items: center; gap: 10px;
-      background: rgba(255, 255, 255, 0.85); padding: 6px 14px; border-radius: 99px;
-      border: 1px solid #e2e8f0; font-size: 11.5px; color: #334155;
+      background: rgba(255, 255, 255, 0.86);
+      backdrop-filter: blur(8px);
+      padding: 6px 15px; border-radius: 99px;
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 3px 10px rgba(15, 23, 42, 0.06);
+      font-size: 11.5px; color: #334155;
     }
     .city-highlight strong { color: #0f172a; font-weight: 700; }
-    .highlight-sep { color: #cbd5e1; }
+    .highlight-sep { color: #94a3b8; }
 
     @media (max-width: 1060px) {
       .city-highlight { display: none; }
     }
 
     .right-bar { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
-    .clock-box { text-align: right; }
-    #live-clock { display: block; font-size: 11.5px; font-weight: 700; color: #0f172a; }
-    #last-updated { display: block; font-size: 10px; color: #64748b; }
+    .clock-box {
+      text-align: right;
+      background: rgba(255, 255, 255, 0.68);
+      backdrop-filter: blur(6px);
+      padding: 4px 10px;
+      border-radius: 9px;
+      border: 1px solid rgba(255, 255, 255, 0.75);
+    }
+    #live-clock { display: block; font-size: 11.5px; font-weight: 800; color: #0f172a; }
+    #last-updated { display: block; font-size: 10px; font-weight: 600; color: #334155; }
 
     .btn-refresh {
       background: #0f172a;
-      border: none; padding: 8px 13px; border-radius: 8px; color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 8px 13px; border-radius: 9px; color: #ffffff;
       font-size: 11.5px; font-weight: 600; cursor: pointer; transition: 0.15s;
+      box-shadow: 0 3px 10px rgba(15, 23, 42, 0.16);
     }
-    .btn-refresh:hover { background: #334155; }
+    .btn-refresh:hover { background: #1e293b; transform: translateY(-1px); }
 
     /* Workspace & Latar Belakang Bergerak */
     #workspace {
@@ -251,10 +303,11 @@
 <body>
 
   <header>
+    <canvas id="header-motion-canvas"></canvas>
+
     <div class="brand">
       <div class="brand-icon" title="TerraBandung">
         <img src="logo.png" alt="Logo TerraBandung" onerror="this.style.display='none'" />
-        <!-- Emblem Vektor Bawaan jika logo.png belum disimpan -->
         <svg viewBox="0 0 64 64" fill="none">
           <defs>
             <linearGradient id="skyGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
@@ -389,6 +442,63 @@
       </div>
     </aside>
   </div>
+
+  <!-- Animasi Gelombang & Awan Bergerak pada Header -->
+  <script>
+    (function initHeaderMotion() {
+      const canvas = document.getElementById('header-motion-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let w = 0, h = 0, phase = 0;
+
+      const puffs = Array.from({ length: 10 }, (_, i) => ({
+        x: i * 160,
+        y: 12 + (i % 4) * 13,
+        r: 22 + (i % 3) * 12,
+        speed: 0.45 + (i % 3) * 0.22
+      }));
+
+      function resizeHeaderCanvas() {
+        w = canvas.width = canvas.parentElement ? canvas.parentElement.clientWidth : window.innerWidth;
+        h = canvas.height = 64;
+      }
+      resizeHeaderCanvas();
+      window.addEventListener('resize', resizeHeaderCanvas);
+
+      function renderHeaderFrame() {
+        ctx.clearRect(0, 0, w, h);
+        phase += 0.025;
+
+        // Gelombang angin transparan mengalir di header
+        ctx.beginPath();
+        ctx.moveTo(0, h);
+        for (let x = 0; x <= w; x += 24) {
+          const y = 38 + Math.sin(x * 0.008 + phase) * 8 + Math.cos(x * 0.015 - phase * 0.7) * 4;
+          ctx.lineTo(x, y);
+        }
+        ctx.lineTo(w, h);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.24)';
+        ctx.fill();
+
+        // Gumpalan cahaya/awan lembut bergerak
+        puffs.forEach(p => {
+          p.x += p.speed;
+          if (p.x - p.r > w + 30) p.x = -p.r - 30;
+          const g = ctx.createRadialGradient(p.x, p.y, 2, p.x, p.y, p.r);
+          g.addColorStop(0, 'rgba(255, 255, 255, 0.42)');
+          g.addColorStop(1, 'rgba(255, 255, 255, 0)');
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        requestAnimationFrame(renderHeaderFrame);
+      }
+      renderHeaderFrame();
+    })();
+  </script>
 
   <script src="bandung-data.js"></script>
   <script src="app.js"></script>
