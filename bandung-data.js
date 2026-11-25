@@ -1,13 +1,16 @@
-// Batas Luar Wilayah Administrasi Kota Bandung (GeoJSON Ring [lng, lat])
+// Batas Luar Wilayah Administrasi Kota Bandung (Kontur Alami [lng, lat])
 const kotaBandungBoundary = [
-  [107.582, -6.852], [107.606, -6.836], [107.630, -6.848],
-  [107.668, -6.866], [107.706, -6.884], [107.734, -6.912],
-  [107.726, -6.953], [107.682, -6.969], [107.624, -6.966],
-  [107.574, -6.956], [107.550, -6.925], [107.562, -6.884],
-  [107.582, -6.852]
+  [107.588, -6.842], [107.606, -6.834], [107.625, -6.848],
+  [107.648, -6.863], [107.674, -6.873], [107.702, -6.883],
+  [107.726, -6.898], [107.738, -6.916], [107.732, -6.938],
+  [107.718, -6.956], [107.696, -6.967], [107.672, -6.968],
+  [107.646, -6.966], [107.622, -6.969], [107.596, -6.962],
+  [107.576, -6.954], [107.556, -6.938], [107.550, -6.918],
+  [107.558, -6.898], [107.568, -6.878], [107.576, -6.858],
+  [107.588, -6.842]
 ];
 
-// 30 Kecamatan Resmi Kota Bandung beserta Koordinat Pusat, Elevasi (mdpl), & Titik Pantau
+// 30 Kecamatan Kota Bandung beserta Koordinat Pusat, Elevasi (mdpl), & Titik Pantau
 const kecamatanBandungList = [
   { id: "cidadap", name: "Cidadap", wilayah: "Utara", elevation: 895, lat: -6.856, lng: 107.605, hotspot: "Ledeng, Ciumbuleuit & Punclut" },
   { id: "sukasari", name: "Sukasari", wilayah: "Utara", elevation: 825, lat: -6.868, lng: 107.584, hotspot: "Gegerkalong, Setiabudi & Sarijadi" },
@@ -41,7 +44,7 @@ const kecamatanBandungList = [
   { id: "cinambo", name: "Cinambo", wilayah: "Timur", elevation: 685, lat: -6.924, lng: 107.694, hotspot: "Pakemitan, Sukamulya & Cisaranten Wetan" }
 ];
 
-// Generator Poligon Spasial Voronoi Terklip Batas Kota Bandung (Menghasilkan 30 Poligon Saling Bertautan)
+// Generator Poligon Spasial 30 Kecamatan Kota Bandung
 function generateBandungKecamatanGeoJSON() {
   function clipHalfPlane(poly, mx, my, nx, ny) {
     const out = [];
@@ -79,8 +82,7 @@ function generateBandungKecamatanGeoJSON() {
     if (cell.length >= 3) {
       cell.push([...cell[0]]);
     } else {
-      // Fallback poligon kecil jika terklip ekstrem
-      const d = 0.008;
+      const d = 0.007;
       cell = [
         [kec.lng - d, kec.lat - d], [kec.lng + d, kec.lat - d],
         [kec.lng + d, kec.lat + d], [kec.lng - d, kec.lat + d],

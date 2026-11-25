@@ -13,7 +13,7 @@ setInterval(() => {
   document.getElementById('live-clock').innerText = `${now} WIB`;
 }, 1000);
 
-// 1. Inisialisasi Peta Terang Kota Bandung (Esri ArcGIS Public Tiles — Anti-403)
+// 1. Inisialisasi Peta Terang Kota Bandung
 function initMap() {
   const transparentTile = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 
@@ -102,7 +102,7 @@ function getWeatherStatus(kec) {
   };
 }
 
-// 4. Render Poligon Wilayah Kota Bandung
+// 4. Render Poligon Wilayah Kota Bandung (Halus & Transparan)
 function renderMapPolygons() {
   polygonLayer.clearLayers();
 
@@ -115,20 +115,22 @@ function renderMapPolygons() {
     const poly = L.geoJSON(feature, {
       style: {
         fillColor: status.color,
-        weight: isSel ? 3.5 : 2,
-        color: isSel ? '#0f172a' : '#ffffff',
-        fillOpacity: isSel ? 0.56 : 0.34
+        weight: isSel ? 2.2 : 1,
+        opacity: isSel ? 0.9 : 0.55,
+        color: isSel ? '#0284c7' : '#475569',
+        fillOpacity: isSel ? 0.28 : 0.14
       }
     }).addTo(polygonLayer);
 
     poly.on('mouseover', function () {
-      this.setStyle({ fillOpacity: 0.62, weight: 3, color: '#0f172a' });
+      this.setStyle({ fillOpacity: 0.32, weight: 2, color: '#0284c7', opacity: 0.9 });
     });
     poly.on('mouseout', function () {
       this.setStyle({
-        fillOpacity: isSel ? 0.56 : 0.34,
-        weight: isSel ? 3.5 : 2,
-        color: isSel ? '#0f172a' : '#ffffff'
+        fillOpacity: isSel ? 0.28 : 0.14,
+        weight: isSel ? 2.2 : 1,
+        color: isSel ? '#0284c7' : '#475569',
+        opacity: isSel ? 0.9 : 0.55
       });
     });
 
@@ -154,8 +156,8 @@ function selectKecamatan(kecId, fly = true) {
 
   const radarIcon = L.divIcon({
     className: 'radar-pin',
-    html: `<div class="radar-ring" style="background:${status.color};"></div><div style="background:${status.color}; width:14px; height:14px; border-radius:50%; border:2.5px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`,
-    iconSize: [20, 20]
+    html: `<div class="radar-ring" style="background:${status.color}; width:26px; height:26px;"></div><div style="background:${status.color}; width:11px; height:11px; border-radius:50%; border:2px solid #fff; box-shadow:0 2px 5px rgba(0,0,0,0.25);"></div>`,
+    iconSize: [18, 18]
   });
   L.marker([kec.lat, kec.lng], { icon: radarIcon }).addTo(activeMarkerLayer);
 
