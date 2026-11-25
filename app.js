@@ -18,7 +18,7 @@ setInterval(() => {
   if (clockEl) clockEl.innerText = `${now} WIB`;
 }, 1000);
 
-// Animasi latar belakang bergerak: awan lembut, garis angin & partikel cahaya
+// Animasi latar belakang bergerak: awan lembut & garis angin
 function initBackgroundMotion() {
   const canvas = document.getElementById('bg-motion-canvas');
   if (!canvas) return;
@@ -50,7 +50,6 @@ function initBackgroundMotion() {
   function draw() {
     ctx.clearRect(0, 0, w, h);
 
-    // Gumpalan awan lembut melayang
     clouds.forEach(c => {
       c.x += c.speed;
       if (c.x - c.r > w + 80) {
@@ -67,7 +66,6 @@ function initBackgroundMotion() {
       ctx.fill();
     });
 
-    // Hembusan garis angin halus
     breezes.forEach(b => {
       b.x += b.speed;
       if (b.x > w + 60) {
@@ -127,6 +125,7 @@ function initMap() {
     weatherById[kec.id] = createFallbackWeather(kec);
   });
   updateCityHighlights();
+  updateFilterCounts();
   filterQuickList();
   renderMapPolygons();
 
@@ -146,12 +145,34 @@ function setStatusFilter(filterType) {
   ['all', 'sunny', 'cloudy', 'rain'].forEach(t => {
     const btn = document.getElementById(`filter-${t}`);
     if (btn) {
-      if (t === filterType) btn.classList.add('active');
-      else btn.classList.remove('active');
+      btn.classList.toggle('active', t === filterType);
     }
   });
   renderMapPolygons();
   filterQuickList();
+}
+
+function updateFilterCounts() {
+  let sunnyCount = 0;
+  let cloudyCount = 0;
+  let rainCount = 0;
+
+  fallbackKecList.forEach(k => {
+    const st = getWeatherStatus(k);
+    if (st.code === 'sunny') sunnyCount++;
+    else if (st.code === 'cloudy') cloudyCount++;
+    else rainCount++;
+  });
+
+  const allBtn = document.getElementById('filter-all');
+  const sunBtn = document.getElementById('filter-sunny');
+  const cldBtn = document.getElementById('filter-cloudy');
+  const rainBtn = document.getElementById('filter-rain');
+
+  if (allBtn) allBtn.innerText = `Semua (${fallbackKecList.length})`;
+  if (sunBtn) sunBtn.innerText = `Cerah (${sunnyCount})`;
+  if (cldBtn) cldBtn.innerText = `Berawan (${cloudyCount})`;
+  if (rainBtn) rainBtn.innerText = `Hujan (${rainCount})`;
 }
 
 function setBasemap(type) {
@@ -519,6 +540,17 @@ function filterQuickList() {
 
   if (countEl) countEl.innerText = `${filtered.length} Wilayah`;
 
+  if (filtered.length === 0) {
+    const emptyBox = document.createElement('div');
+    emptyBox.className = 'empty-filter-box';
+    emptyBox.innerHTML = `
+      <div>Tidak ada wilayah dengan kategori cuaca yang dipilih saat ini.</div>
+      <button type="button" class="btn-reset-filter" onclick="setStatusFilter('all')">Tampilkan Semua (${fallbackKecList.length} Wilayah)</button>
+    `;
+    listEl.appendChild(emptyBox);
+    return;
+  }
+
   filtered.forEach(kec => {
     const w = weatherById[kec.id] || createFallbackWeather(kec);
     const status = getWeatherStatus(kec);
@@ -539,6 +571,7 @@ function filterQuickList() {
 async function refreshAllData() {
   const isLive = await fetchAllBandungWeather();
   updateCityHighlights();
+  updateFilterCounts();
   filterQuickList();
   selectKecamatan(selectedKecId, false);
   const now = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });

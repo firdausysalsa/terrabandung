@@ -35,16 +35,25 @@
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 20px; z-index: 1000; gap: 12px;
     }
-    .brand { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .brand { display: flex; align-items: center; gap: 11px; flex-shrink: 0; }
     .brand-icon {
-      width: 38px; height: 38px; border-radius: 11px;
-      background: #ffffff;
-      border: 1.5px solid #cbd5e1;
+      position: relative;
+      width: 42px; height: 42px; border-radius: 12px;
+      background: #f8fafc;
+      border: 1.5px solid #bae6fd;
       display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
       flex-shrink: 0;
-      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
+      box-shadow: 0 3px 10px rgba(2, 132, 199, 0.14);
     }
-    .brand h1 { font-size: 16.5px; font-weight: 800; letter-spacing: -0.3px; color: #0f172a; line-height: 1.15; }
+    .brand-icon img {
+      position: absolute; inset: 0; z-index: 2;
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+    .brand-icon svg {
+      width: 100%; height: 100%; display: block;
+    }
+    .brand h1 { font-size: 17px; font-weight: 800; letter-spacing: -0.3px; color: #0f172a; line-height: 1.15; }
     .brand h1 span { color: #0284c7; }
     .brand p { font-size: 10.5px; color: #64748b; }
 
@@ -56,57 +65,21 @@
     .city-highlight strong { color: #0f172a; font-weight: 700; }
     .highlight-sep { color: #cbd5e1; }
 
-    @media (max-width: 1140px) {
+    @media (max-width: 1060px) {
       .city-highlight { display: none; }
     }
 
-    .right-bar { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .right-bar { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
     .clock-box { text-align: right; }
     #live-clock { display: block; font-size: 11.5px; font-weight: 700; color: #0f172a; }
     #last-updated { display: block; font-size: 10px; color: #64748b; }
 
     .btn-refresh {
       background: #0f172a;
-      border: none; padding: 7px 12px; border-radius: 8px; color: #ffffff;
+      border: none; padding: 8px 13px; border-radius: 8px; color: #ffffff;
       font-size: 11.5px; font-weight: 600; cursor: pointer; transition: 0.15s;
     }
     .btn-refresh:hover { background: #334155; }
-
-    /* Kartu Profil Pengguna */
-    .profile-chip {
-      display: flex; align-items: center; gap: 8px;
-      padding: 3px 11px 3px 4px;
-      border-radius: 99px;
-      background: #ffffff;
-      border: 1px solid #cbd5e1;
-      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
-    }
-    .avatar-box {
-      position: relative;
-      width: 34px; height: 34px; border-radius: 50%;
-      overflow: hidden; background: #e0f2fe;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-      border: 1.5px solid #0284c7;
-    }
-    .avatar-box img {
-      position: absolute; inset: 0; z-index: 2;
-      width: 100%; height: 100%; object-fit: cover; display: block;
-    }
-    .avatar-box svg {
-      width: 100%; height: 100%; display: block;
-    }
-    .profile-info { display: flex; flex-direction: column; line-height: 1.15; }
-    .profile-name {
-      font-size: 11.5px; font-weight: 700; color: #0f172a;
-      max-width: 125px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .profile-role {
-      font-size: 9.5px; font-weight: 600; color: #0284c7;
-    }
-    @media (max-width: 740px) {
-      .profile-info { display: none; }
-    }
 
     /* Workspace & Latar Belakang Bergerak */
     #workspace {
@@ -118,7 +91,6 @@
       position: relative; width: 100%; height: 100%;
       background: transparent; z-index: 2;
     }
-    /* Lapisan atmosfer bergerak di atas peta tanpa menghalangi klik */
     #bg-motion-canvas {
       position: absolute; inset: 0; width: 100%; height: 100%;
       z-index: 450; pointer-events: none;
@@ -250,6 +222,18 @@
     }
     .quick-item:hover { background: #f1f5f9; border-color: #94a3b8; }
 
+    .empty-filter-box {
+      margin-top: 6px; padding: 12px; border-radius: 9px;
+      background: #f8fafc; border: 1px dashed #cbd5e1;
+      text-align: center; font-size: 11.5px; color: #475569;
+    }
+    .btn-reset-filter {
+      margin-top: 8px; background: #0284c7; color: #ffffff;
+      border: none; border-radius: 7px; padding: 6px 12px;
+      font-size: 11px; font-weight: 600; cursor: pointer;
+    }
+    .btn-reset-filter:hover { background: #0369a1; }
+
     .credit-footer {
       font-size: 10.5px; color: #64748b; text-align: center; padding-top: 4px; flex-shrink: 0;
     }
@@ -269,11 +253,25 @@
   <header>
     <div class="brand">
       <div class="brand-icon" title="TerraBandung">
-        <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
-          <path d="M7 14C7 9.03 11.03 5 16 5C20.97 5 25 9.03 25 14" stroke="#0284c7" stroke-width="2.4" stroke-linecap="round"/>
-          <circle cx="16" cy="9.5" r="2" fill="#0284c7"/>
-          <path d="M4 23L11 15L16.5 20.5L21.5 16L28 23H4Z" fill="#1e293b"/>
-          <path d="M9 23L16.5 16.5L24 23H9Z" fill="#10b981"/>
+        <img src="logo.png" alt="Logo TerraBandung" onerror="this.style.display='none'" />
+        <!-- Emblem Vektor Bawaan jika logo.png belum disimpan -->
+        <svg viewBox="0 0 64 64" fill="none">
+          <defs>
+            <linearGradient id="skyGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#e0f2fe"/>
+              <stop offset="100%" stop-color="#ecfdf5"/>
+            </linearGradient>
+            <linearGradient id="hillGrad" x1="10" y1="30" x2="54" y2="56" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#10b981"/>
+              <stop offset="100%" stop-color="#047857"/>
+            </linearGradient>
+          </defs>
+          <rect width="64" height="64" fill="url(#skyGrad)"/>
+          <circle cx="32" cy="30" r="21" stroke="#0284c7" stroke-width="2" stroke-dasharray="5 4" opacity="0.55"/>
+          <circle cx="43" cy="19" r="7" fill="#f59e0b"/>
+          <path d="M18 25C18 21.7 20.7 19 24 19C26.6 19 28.8 20.6 29.6 22.9C30.2 22.6 30.8 22.5 31.5 22.5C34 22.5 36 24.5 36 27C36 29.5 34 31.5 31.5 31.5H23.5C20.5 31.5 18 29 18 26V25Z" fill="#ffffff" stroke="#bae6fd" stroke-width="1.5"/>
+          <path d="M6 52L22 33L33 44L43 35L58 52H6Z" fill="#0f172a"/>
+          <path d="M15 52L32 36L49 52H15Z" fill="url(#hillGrad)"/>
         </svg>
       </div>
       <div>
@@ -294,29 +292,6 @@
         <span id="last-updated">Memuat data...</span>
       </div>
       <button type="button" class="btn-refresh" onclick="refreshAllData()">↻ Perbarui</button>
-
-      <div class="profile-chip" title="Salsa Firdausy Kurniawan">
-        <div class="avatar-box">
-          <img src="avatar.jpg" alt="Foto Profil Salsa Firdausy Kurniawan" onerror="this.style.display='none'" />
-          <!-- Ilustrasi Avatar Bawaan jika avatar.jpg belum disimpan -->
-          <svg viewBox="0 0 64 64" fill="none">
-            <rect width="64" height="64" fill="#fef3c7"/>
-            <path d="M14 58C14 44 21 38 32 38C43 38 50 44 50 58" fill="#6b8e78"/>
-            <path d="M17 31C17 20 23.5 13 32 13C40.5 13 47 20 47 31C47 41 41 47 32 47C23 47 17 41 17 31Z" fill="#7c9a87"/>
-            <ellipse cx="32" cy="30" rx="10.5" ry="11.5" fill="#f5cbb0"/>
-            <circle cx="28" cy="29" r="3.4" stroke="#334155" stroke-width="1.4" fill="#ffffff" fill-opacity="0.35"/>
-            <circle cx="36" cy="29" r="3.4" stroke="#334155" stroke-width="1.4" fill="#ffffff" fill-opacity="0.35"/>
-            <line x1="31.4" y1="29" x2="32.6" y2="29" stroke="#334155" stroke-width="1.4"/>
-            <circle cx="28" cy="29" r="1.2" fill="#1e293b"/>
-            <circle cx="36" cy="29" r="1.2" fill="#1e293b"/>
-            <path d="M29.5 34.5C30.8 35.8 33.2 35.8 34.5 34.5" stroke="#9a3412" stroke-width="1.4" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div class="profile-info">
-          <span class="profile-name">Salsa Firdausy</span>
-          <span class="profile-role">Bandung • Live</span>
-        </div>
-      </div>
     </div>
   </header>
 
@@ -331,10 +306,10 @@
       </div>
 
       <div class="panel-box pill-group">
-        <button type="button" id="filter-all" class="pill-btn active" onclick="setStatusFilter('all')">Semua</button>
-        <button type="button" id="filter-sunny" class="pill-btn" onclick="setStatusFilter('sunny')">Cerah</button>
-        <button type="button" id="filter-cloudy" class="pill-btn" onclick="setStatusFilter('cloudy')">Berawan</button>
-        <button type="button" id="filter-rain" class="pill-btn" onclick="setStatusFilter('rain')">Hujan</button>
+        <button type="button" id="filter-all" class="pill-btn active" onclick="setStatusFilter('all')">Semua (30)</button>
+        <button type="button" id="filter-sunny" class="pill-btn" onclick="setStatusFilter('sunny')">Cerah (0)</button>
+        <button type="button" id="filter-cloudy" class="pill-btn" onclick="setStatusFilter('cloudy')">Berawan (0)</button>
+        <button type="button" id="filter-rain" class="pill-btn" onclick="setStatusFilter('rain')">Hujan (0)</button>
       </div>
 
       <button type="button" class="panel-box btn-random-kec" onclick="pickRandomKecamatan()">✦ Acak Wilayah</button>
