@@ -71,7 +71,10 @@ function setStatusFilter(filterType) {
   activeStatusFilter = filterType;
   ['all', 'sunny', 'cloudy', 'rain'].forEach(t => {
     const btn = document.getElementById(`filter-${t}`);
-    if (btn) btn.className = t === filterType ? 'pill-btn active' : 'pill-btn';
+    if (btn) {
+      if (t === filterType) btn.classList.add('active');
+      else btn.classList.remove('active');
+    }
   });
   renderMapPolygons();
   filterQuickList();
@@ -83,8 +86,12 @@ function setBasemap(type) {
   activeBasemap = basemaps[type];
   map.addLayer(activeBasemap);
 
-  document.getElementById('base-color').className = type === 'color' ? 'pill-btn active' : 'pill-btn';
-  document.getElementById('base-minimal').className = type === 'minimal' ? 'pill-btn active' : 'pill-btn';
+  const colorBtn = document.getElementById('base-color');
+  const minBtn = document.getElementById('base-minimal');
+  if (colorBtn && minBtn) {
+    colorBtn.classList.toggle('active', type === 'color');
+    minBtn.classList.toggle('active', type === 'minimal');
+  }
 }
 
 function createFallbackWeather(kec) {
@@ -179,7 +186,6 @@ function getCurrentHourIndex(timeArray) {
   }
 }
 
-// Evaluasi Status Cuaca Gabungan: Curah Hujan + Kondisi Langit (weather_code)
 function getWeatherStatus(kec) {
   const w = weatherById[kec.id] || createFallbackWeather(kec);
   const rain = (w.current && typeof w.current.precipitation === 'number') ? w.current.precipitation : 0;
@@ -189,7 +195,6 @@ function getWeatherStatus(kec) {
   const sliceProb = hourlyProb.slice(startIdx, startIdx + 6);
   const prob = sliceProb.length ? Math.max(...sliceProb) : 10;
 
-  // 1. Siaga Genangan (Hujan lebat atau hujan di dataran rendah)
   if (rain >= 4 || (rain >= 1.5 && (kec.elevation || 700) < 690)) {
     return {
       level: 'SIAGA GENANGAN',
@@ -201,7 +206,6 @@ function getWeatherStatus(kec) {
     };
   }
 
-  // 2. Waspada Hujan (Gerimis/hujan aktual atau peluang hujan >= 50%)
   if (rain > 0.1 || code >= 51 || prob >= 50) {
     return {
       level: 'WASPADA HUJAN',
@@ -213,7 +217,6 @@ function getWeatherStatus(kec) {
     };
   }
 
-  // 3. Berawan / Mendung (Tidak hujan, tapi langit tertutup awan / kabut)
   if (code >= 2 && code <= 48) {
     return {
       level: 'BERAWAN / TEDUH',
@@ -225,7 +228,6 @@ function getWeatherStatus(kec) {
     };
   }
 
-  // 4. Cerah / Kondusif (Langit cerah code 0 atau 1)
   return {
     level: 'CERAH / KONDUSIF',
     code: 'sunny',
