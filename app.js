@@ -18,7 +18,81 @@ setInterval(() => {
   if (clockEl) clockEl.innerText = `${now} WIB`;
 }, 1000);
 
+// Animasi latar belakang bergerak: awan lembut, garis angin & partikel cahaya
+function initBackgroundMotion() {
+  const canvas = document.getElementById('bg-motion-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let w = 0, h = 0;
+
+  const clouds = Array.from({ length: 8 }, (_, i) => ({
+    x: (i * 210) % 1400,
+    y: 70 + (i * 85) % 620,
+    r: 85 + (i % 3) * 40,
+    speed: 0.35 + (i % 3) * 0.14
+  }));
+
+  const breezes = Array.from({ length: 14 }, (_, i) => ({
+    x: Math.random() * 1400,
+    y: 40 + (i * 52) % 700,
+    len: 45 + (i % 4) * 25,
+    speed: 1.1 + (i % 3) * 0.45,
+    alpha: 0.18 + (i % 3) * 0.06
+  }));
+
+  function resize() {
+    w = canvas.width = canvas.parentElement ? canvas.parentElement.clientWidth : window.innerWidth;
+    h = canvas.height = canvas.parentElement ? canvas.parentElement.clientHeight : window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+
+    // Gumpalan awan lembut melayang
+    clouds.forEach(c => {
+      c.x += c.speed;
+      if (c.x - c.r > w + 80) {
+        c.x = -c.r - 80;
+        c.y = 60 + Math.random() * Math.max(140, h - 120);
+      }
+      const grad = ctx.createRadialGradient(c.x, c.y, c.r * 0.12, c.x, c.y, c.r);
+      grad.addColorStop(0, 'rgba(255, 255, 255, 0.34)');
+      grad.addColorStop(0.6, 'rgba(224, 242, 254, 0.16)');
+      grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Hembusan garis angin halus
+    breezes.forEach(b => {
+      b.x += b.speed;
+      if (b.x > w + 60) {
+        b.x = -b.len - 40;
+        b.y = 40 + Math.random() * Math.max(120, h - 80);
+      }
+      const lineGrad = ctx.createLinearGradient(b.x, b.y, b.x + b.len, b.y);
+      lineGrad.addColorStop(0, 'rgba(2, 132, 199, 0)');
+      lineGrad.addColorStop(0.5, `rgba(2, 132, 199, ${b.alpha})`);
+      lineGrad.addColorStop(1, 'rgba(2, 132, 199, 0)');
+      ctx.strokeStyle = lineGrad;
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(b.x, b.y);
+      ctx.lineTo(b.x + b.len, b.y);
+      ctx.stroke();
+    });
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
 function initMap() {
+  initBackgroundMotion();
   const transparentTile = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 
   basemaps = {
@@ -380,7 +454,7 @@ function renderChart(name, hourly) {
           backgroundColor: 'rgba(16, 185, 129, 0.12)',
           yAxisID: 'y',
           borderWidth: 2,
-          pointRadius: 2.5,
+          pointRadius: 2.2,
           fill: true,
           tension: 0.35
         },
@@ -391,18 +465,37 @@ function renderChart(name, hourly) {
           yAxisID: 'y1',
           borderWidth: 2,
           borderDash: [4, 4],
-          pointRadius: 2.5,
+          pointRadius: 2.2,
           tension: 0.35
         }
       ]
     },
     options: {
       responsive: true,
-      plugins: { legend: { labels: { color: '#334155', boxWidth: 10, font: { size: 11, weight: '600' } } } },
+      maintainAspectRatio: false,
+      layout: { padding: { left: 2, right: 2, top: 2, bottom: 0 } },
+      plugins: {
+        legend: {
+          labels: { color: '#334155', boxWidth: 9, padding: 8, font: { size: 10, weight: '600' } }
+        }
+      },
       scales: {
-        x: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: 'rgba(15, 23, 42, 0.05)' } },
-        y: { position: 'left', ticks: { color: '#059669', font: { size: 10 } }, grid: { color: 'rgba(15, 23, 42, 0.06)' } },
-        y1: { position: 'right', min: 0, max: 100, ticks: { color: '#0284c7', font: { size: 10 } }, grid: { drawOnChartArea: false } }
+        x: {
+          ticks: { color: '#64748b', font: { size: 9 }, maxRotation: 40, minRotation: 0, autoSkip: true, maxTicksLimit: 7 },
+          grid: { color: 'rgba(15, 23, 42, 0.05)' }
+        },
+        y: {
+          position: 'left',
+          ticks: { color: '#059669', font: { size: 9 }, padding: 2 },
+          grid: { color: 'rgba(15, 23, 42, 0.06)' }
+        },
+        y1: {
+          position: 'right',
+          min: 0,
+          max: 100,
+          ticks: { color: '#0284c7', font: { size: 9 }, padding: 2 },
+          grid: { drawOnChartArea: false }
+        }
       }
     }
   });

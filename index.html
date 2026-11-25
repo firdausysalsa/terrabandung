@@ -13,60 +13,120 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background: #f1f5f9;
+      background: #e2e8f0;
       color: #1e293b;
       font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
       overflow: hidden;
     }
 
-    header {
-      position: fixed; top: 0; left: 0; right: 0; height: 62px;
-      background: #ffffff;
-      border-bottom: 1px solid #e2e8f0;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 22px; z-index: 1000; gap: 12px;
+    @keyframes headerAurora {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
-    .brand { display: flex; align-items: center; gap: 11px; flex-shrink: 0; }
+
+    header {
+      position: fixed; top: 0; left: 0; right: 0; height: 64px;
+      background: linear-gradient(120deg, rgba(255,255,255,0.97), rgba(240,249,255,0.96), rgba(236,253,245,0.96), rgba(255,255,255,0.97));
+      background-size: 260% 260%;
+      animation: headerAurora 14s ease infinite;
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid #dbeafe;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px; z-index: 1000; gap: 12px;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
     .brand-icon {
-      width: 38px; height: 38px; border-radius: 10px;
-      background: #f8fafc;
+      width: 38px; height: 38px; border-radius: 11px;
+      background: #ffffff;
       border: 1.5px solid #cbd5e1;
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
     }
-    .brand h1 { font-size: 17px; font-weight: 800; letter-spacing: -0.3px; color: #0f172a; line-height: 1.15; }
+    .brand h1 { font-size: 16.5px; font-weight: 800; letter-spacing: -0.3px; color: #0f172a; line-height: 1.15; }
     .brand h1 span { color: #0284c7; }
-    .brand p { font-size: 11px; color: #64748b; }
+    .brand p { font-size: 10.5px; color: #64748b; }
 
     .city-highlight {
       display: flex; align-items: center; gap: 10px;
-      background: #f8fafc; padding: 6px 14px; border-radius: 99px;
+      background: rgba(255, 255, 255, 0.85); padding: 6px 14px; border-radius: 99px;
       border: 1px solid #e2e8f0; font-size: 11.5px; color: #334155;
     }
     .city-highlight strong { color: #0f172a; font-weight: 700; }
     .highlight-sep { color: #cbd5e1; }
 
-    @media (max-width: 1020px) {
+    @media (max-width: 1140px) {
       .city-highlight { display: none; }
     }
 
-    .right-bar { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+    .right-bar { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
     .clock-box { text-align: right; }
-    #live-clock { display: block; font-size: 12px; font-weight: 700; color: #0f172a; }
-    #last-updated { display: block; font-size: 10.5px; color: #64748b; }
+    #live-clock { display: block; font-size: 11.5px; font-weight: 700; color: #0f172a; }
+    #last-updated { display: block; font-size: 10px; color: #64748b; }
 
     .btn-refresh {
       background: #0f172a;
-      border: none; padding: 8px 13px; border-radius: 8px; color: #ffffff;
-      font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.15s;
+      border: none; padding: 7px 12px; border-radius: 8px; color: #ffffff;
+      font-size: 11.5px; font-weight: 600; cursor: pointer; transition: 0.15s;
     }
     .btn-refresh:hover { background: #334155; }
 
-    #workspace { position: fixed; top: 62px; left: 0; right: 0; bottom: 0; }
-    #map { width: 100%; height: 100%; background: #e2e8f0; z-index: 1; }
+    /* Kartu Profil Pengguna */
+    .profile-chip {
+      display: flex; align-items: center; gap: 8px;
+      padding: 3px 11px 3px 4px;
+      border-radius: 99px;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+    }
+    .avatar-box {
+      position: relative;
+      width: 34px; height: 34px; border-radius: 50%;
+      overflow: hidden; background: #e0f2fe;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      border: 1.5px solid #0284c7;
+    }
+    .avatar-box img {
+      position: absolute; inset: 0; z-index: 2;
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+    .avatar-box svg {
+      width: 100%; height: 100%; display: block;
+    }
+    .profile-info { display: flex; flex-direction: column; line-height: 1.15; }
+    .profile-name {
+      font-size: 11.5px; font-weight: 700; color: #0f172a;
+      max-width: 125px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .profile-role {
+      font-size: 9.5px; font-weight: 600; color: #0284c7;
+    }
+    @media (max-width: 740px) {
+      .profile-info { display: none; }
+    }
+
+    /* Workspace & Latar Belakang Bergerak */
+    #workspace {
+      position: fixed; top: 64px; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(135deg, #bae6fd 0%, #e0f2fe 50%, #dcfce7 100%);
+      overflow: hidden;
+    }
+    #map {
+      position: relative; width: 100%; height: 100%;
+      background: transparent; z-index: 2;
+    }
+    /* Lapisan atmosfer bergerak di atas peta tanpa menghalangi klik */
+    #bg-motion-canvas {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      z-index: 450; pointer-events: none;
+    }
 
     .panel-box {
-      background: rgba(255, 255, 255, 0.96);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
       border: 1px solid #e2e8f0;
       box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
     }
@@ -80,7 +140,7 @@
     .pill-btn {
       border: none; cursor: pointer; font-size: 11.5px; font-weight: 600;
       padding: 6px 11px; border-radius: 7px; color: #475569; background: transparent;
-      pointer-events: auto;
+      pointer-events: auto; transition: 0.15s;
     }
     .pill-btn:hover { color: #0f172a; background: #f1f5f9; }
     .pill-btn.active { background: #0f172a; color: #ffffff; }
@@ -89,9 +149,9 @@
     .btn-random-kec {
       cursor: pointer; font-size: 11.5px; font-weight: 600;
       padding: 8px 12px; border-radius: 10px; color: #0284c7;
-      pointer-events: auto;
+      pointer-events: auto; transition: 0.15s;
     }
-    .btn-random-kec:hover { background: #f8fafc; color: #0369a1; }
+    .btn-random-kec:hover { background: #f0f9ff; color: #0369a1; }
 
     .kec-map-label {
       font-size: 9.5px;
@@ -112,13 +172,14 @@
     .dot { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
 
     #detail-panel {
-      position: absolute; top: 14px; right: 16px; bottom: 16px; width: 385px; max-width: 92vw;
+      position: absolute; top: 14px; right: 16px; bottom: 16px; width: 396px; max-width: 92vw;
       z-index: 900; border-radius: 14px; display: flex; flex-direction: column; overflow: hidden;
     }
     .panel-head {
       padding: 15px 17px;
-      background: #f8fafc;
+      background: linear-gradient(135deg, #f8fafc 0%, #f0f9ff 100%);
       border-bottom: 1px solid #e2e8f0;
+      flex-shrink: 0;
     }
     .panel-meta { display: flex; justify-content: space-between; align-items: center; font-size: 10.5px; }
     .badge-tag {
@@ -133,18 +194,45 @@
     }
     #panel-subtitle { font-size: 11.5px; color: #64748b; margin-top: 4px; }
 
-    .panel-body { padding: 14px 16px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 11px; }
+    .panel-body {
+      padding: 14px 16px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+    }
     .card {
       padding: 12px 13px; border-radius: 11px;
       background: #ffffff;
       border: 1px solid #e2e8f0;
+      min-width: 0;
+      max-width: 100%;
+      overflow: hidden;
+      flex-shrink: 0;
     }
+    .chart-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 100%;
+      height: 165px;
+      margin-top: 4px;
+      overflow: hidden;
+    }
+    .chart-wrap canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+    }
+
     .status-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 10px; color: #64748b; font-weight: 700; letter-spacing: 0.4px; }
-    .status-pill { padding: 3px 9px; border-radius: 6px; font-size: 10px; font-weight: 700; }
+    .status-pill { padding: 3px 9px; border-radius: 6px; font-size: 10px; font-weight: 700; flex-shrink: 0; }
     #status-advice { font-size: 12.5px; line-height: 1.5; color: #334155; }
 
-    .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
-    .kpi-card { padding: 11px 12px; border-radius: 10px; border: 1px solid #e2e8f0; background: #f8fafc; }
+    .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; flex-shrink: 0; }
+    .kpi-card { padding: 11px 12px; border-radius: 10px; border: 1px solid #e2e8f0; background: #f8fafc; min-width: 0; }
     .kpi-label { font-size: 11px; color: #64748b; font-weight: 600; display: block; margin-bottom: 3px; }
     .kpi-val { font-size: 17px; font-weight: 800; color: #0f172a; }
 
@@ -158,12 +246,12 @@
     .quick-item {
       padding: 8px 10px; border-radius: 9px; background: #f8fafc;
       border: 1px solid #e2e8f0; cursor: pointer;
-      display: flex; justify-content: space-between; align-items: center; margin-top: 6px;
+      display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 6px;
     }
     .quick-item:hover { background: #f1f5f9; border-color: #94a3b8; }
 
     .credit-footer {
-      font-size: 10.5px; color: #64748b; text-align: center; padding-top: 4px;
+      font-size: 10.5px; color: #64748b; text-align: center; padding-top: 4px; flex-shrink: 0;
     }
     .credit-footer a { color: #0284c7; text-decoration: none; font-weight: 600; }
 
@@ -206,13 +294,36 @@
         <span id="last-updated">Memuat data...</span>
       </div>
       <button type="button" class="btn-refresh" onclick="refreshAllData()">↻ Perbarui</button>
+
+      <div class="profile-chip" title="Salsa Firdausy Kurniawan">
+        <div class="avatar-box">
+          <img src="avatar.jpg" alt="Foto Profil Salsa Firdausy Kurniawan" onerror="this.style.display='none'" />
+          <!-- Ilustrasi Avatar Bawaan jika avatar.jpg belum disimpan -->
+          <svg viewBox="0 0 64 64" fill="none">
+            <rect width="64" height="64" fill="#fef3c7"/>
+            <path d="M14 58C14 44 21 38 32 38C43 38 50 44 50 58" fill="#6b8e78"/>
+            <path d="M17 31C17 20 23.5 13 32 13C40.5 13 47 20 47 31C47 41 41 47 32 47C23 47 17 41 17 31Z" fill="#7c9a87"/>
+            <ellipse cx="32" cy="30" rx="10.5" ry="11.5" fill="#f5cbb0"/>
+            <circle cx="28" cy="29" r="3.4" stroke="#334155" stroke-width="1.4" fill="#ffffff" fill-opacity="0.35"/>
+            <circle cx="36" cy="29" r="3.4" stroke="#334155" stroke-width="1.4" fill="#ffffff" fill-opacity="0.35"/>
+            <line x1="31.4" y1="29" x2="32.6" y2="29" stroke="#334155" stroke-width="1.4"/>
+            <circle cx="28" cy="29" r="1.2" fill="#1e293b"/>
+            <circle cx="36" cy="29" r="1.2" fill="#1e293b"/>
+            <path d="M29.5 34.5C30.8 35.8 33.2 35.8 34.5 34.5" stroke="#9a3412" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="profile-info">
+          <span class="profile-name">Salsa Firdausy</span>
+          <span class="profile-role">Bandung • Live</span>
+        </div>
+      </div>
     </div>
   </header>
 
   <div id="workspace">
     <div id="map"></div>
+    <canvas id="bg-motion-canvas"></canvas>
 
-    <!-- Kontrol Peta: Tema + Filter Cuaca Lengkap + Acak Wilayah -->
     <div id="map-top-bar">
       <div class="panel-box pill-group">
         <button type="button" id="base-color" class="pill-btn active" onclick="setBasemap('color')">Peta Berwarna</button>
@@ -229,7 +340,6 @@
       <button type="button" class="panel-box btn-random-kec" onclick="pickRandomKecamatan()">✦ Acak Wilayah</button>
     </div>
 
-    <!-- Legenda 4 Kondisi -->
     <div id="map-legend" class="panel-box">
       <strong>Kondisi Cuaca Bandung</strong>
       <div class="legend-row"><span class="dot" style="background:#10b981;"></span> Cerah / Kondusif</div>
@@ -238,7 +348,6 @@
       <div class="legend-row"><span class="dot" style="background:#ef4444;"></span> Siaga Genangan</div>
     </div>
 
-    <!-- Panel Detail Kanan -->
     <aside id="detail-panel" class="panel-box">
       <div class="panel-head">
         <div class="panel-meta">
@@ -285,7 +394,9 @@
             <span id="chart-title">PRAKIRAAN 12 JAM KE DEPAN</span>
             <span>Open-Meteo</span>
           </div>
-          <canvas id="weatherChart" height="145"></canvas>
+          <div class="chart-wrap">
+            <canvas id="weatherChart"></canvas>
+          </div>
         </div>
 
         <div class="card">
