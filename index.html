@@ -19,7 +19,7 @@
       overflow: hidden;
     }
 
-    /* Header Editorial Bersih */
+    /* Header */
     header {
       position: fixed; top: 0; left: 0; right: 0; height: 62px;
       background: #ffffff;
@@ -39,7 +39,7 @@
     .brand h1 span { color: #0284c7; }
     .brand p { font-size: 11px; color: #64748b; }
 
-    /* Highlight Suhu & Kondisi Kota di Tengah Header */
+    /* Sorotan Suhu Kota */
     .city-highlight {
       display: flex; align-items: center; gap: 10px;
       background: #f8fafc; padding: 6px 14px; border-radius: 99px;
@@ -68,7 +68,6 @@
     #workspace { position: fixed; top: 62px; left: 0; right: 0; bottom: 0; }
     #map { width: 100%; height: 100%; background: #e2e8f0; z-index: 1; }
 
-    /* Panel Bersih */
     .panel-box {
       background: rgba(255, 255, 255, 0.96);
       border: 1px solid #e2e8f0;
@@ -83,14 +82,14 @@
     .pill-group { padding: 3px; border-radius: 10px; display: flex; gap: 3px; }
     .pill-btn {
       border: none; cursor: pointer; font-size: 11.5px; font-weight: 600;
-      padding: 6px 12px; border-radius: 7px; color: #475569; background: transparent;
+      padding: 6px 11px; border-radius: 7px; color: #475569; background: transparent;
     }
     .pill-btn:hover { color: #0f172a; }
     .pill-btn.active { background: #0f172a; color: #ffffff; }
 
     .btn-random-kec {
       cursor: pointer; font-size: 11.5px; font-weight: 600;
-      padding: 8px 13px; border-radius: 10px; color: #0284c7;
+      padding: 8px 12px; border-radius: 10px; color: #0284c7;
     }
     .btn-random-kec:hover { background: #f8fafc; color: #0369a1; }
 
@@ -106,7 +105,7 @@
       text-align: center;
     }
 
-    /* Legenda */
+    /* Legenda 4 Kondisi */
     #map-legend {
       position: absolute; bottom: 22px; left: 18px; z-index: 900;
       padding: 13px 15px; border-radius: 12px; font-size: 11.5px; color: #1e293b;
@@ -185,7 +184,6 @@
 
   <header>
     <div class="brand">
-      <!-- Logo Vektor Minimalis TerraBandung -->
       <div class="brand-icon" title="TerraBandung">
         <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
           <path d="M7 14C7 9.03 11.03 5 16 5C20.97 5 25 9.03 25 14" stroke="#0284c7" stroke-width="2.4" stroke-linecap="round"/>
@@ -200,7 +198,6 @@
       </div>
     </div>
 
-    <!-- Sorotan Suhu & Titik Terdingin/Terhangat di Header -->
     <div class="city-highlight">
       <span id="hl-cool">Terdingin: --</span>
       <span class="highlight-sep">•</span>
@@ -219,7 +216,7 @@
   <div id="workspace">
     <div id="map"></div>
 
-    <!-- Kontrol Peta: Tema + Filter Cuaca + Acak Kecamatan -->
+    <!-- Kontrol Peta: Tema + Filter Cuaca Lengkap + Acak Wilayah -->
     <div id="map-top-bar">
       <div class="panel-box pill-group">
         <button type="button" id="base-color" class="pill-btn active" onclick="setBasemap('color')">Peta Berwarna</button>
@@ -228,17 +225,19 @@
 
       <div class="panel-box pill-group">
         <button type="button" id="filter-all" class="pill-btn active" onclick="setStatusFilter('all')">Semua</button>
+        <button type="button" id="filter-sunny" class="pill-btn" onclick="setStatusFilter('sunny')">Cerah</button>
+        <button type="button" id="filter-cloudy" class="pill-btn" onclick="setStatusFilter('cloudy')">Berawan</button>
         <button type="button" id="filter-rain" class="pill-btn" onclick="setStatusFilter('rain')">Hujan</button>
-        <button type="button" id="filter-safe" class="pill-btn" onclick="setStatusFilter('safe')">Kondusif</button>
       </div>
 
       <button type="button" class="panel-box btn-random-kec" onclick="pickRandomKecamatan()">✦ Acak Wilayah</button>
     </div>
 
-    <!-- Legenda -->
+    <!-- Legenda 4 Kondisi -->
     <div id="map-legend" class="panel-box">
-      <strong>Status Cuaca Kota Bandung</strong>
-      <div class="legend-row"><span class="dot" style="background:#10b981;"></span> Aman / Kondusif</div>
+      <strong>Kondisi Cuaca Bandung</strong>
+      <div class="legend-row"><span class="dot" style="background:#10b981;"></span> Cerah / Kondusif</div>
+      <div class="legend-row"><span class="dot" style="background:#0ea5e9;"></span> Berawan / Mendung</div>
       <div class="legend-row"><span class="dot" style="background:#f59e0b;"></span> Waspada Hujan</div>
       <div class="legend-row"><span class="dot" style="background:#ef4444;"></span> Siaga Genangan</div>
     </div>

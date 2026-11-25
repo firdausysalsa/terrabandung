@@ -12,14 +12,12 @@ const fallbackKecList = (typeof kecamatanBandungList !== 'undefined' && Array.is
   ? kecamatanBandungList
   : [];
 
-// Jam WIB Live
 setInterval(() => {
   const now = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   const clockEl = document.getElementById('live-clock');
   if (clockEl) clockEl.innerText = `${now} WIB`;
 }, 1000);
 
-// 1. Inisialisasi Peta Terang Kota Bandung
 function initMap() {
   const transparentTile = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 
@@ -51,7 +49,6 @@ function initMap() {
     }
   });
 
-  // Render awal langsung agar tidak pernah tampil 0 Wilayah saat memuat API
   fallbackKecList.forEach(kec => {
     weatherById[kec.id] = createFallbackWeather(kec);
   });
@@ -72,7 +69,7 @@ function pickRandomKecamatan() {
 
 function setStatusFilter(filterType) {
   activeStatusFilter = filterType;
-  ['all', 'rain', 'safe'].forEach(t => {
+  ['all', 'sunny', 'cloudy', 'rain'].forEach(t => {
     const btn = document.getElementById(`filter-${t}`);
     if (btn) btn.className = t === filterType ? 'pill-btn active' : 'pill-btn';
   });
@@ -105,7 +102,7 @@ function createFallbackWeather(kec) {
     const h = d.getHours();
     const diurnal = Math.sin(((h - 6) / 24) * Math.PI * 2) * 2.8;
     temps.push(Number((baseTemp + diurnal).toFixed(1)));
-    probs.push(h >= 13 && h <= 18 ? 40 : 15);
+    probs.push(h >= 13 && h <= 18 ? 35 : 15);
   }
 
   return {
@@ -113,7 +110,7 @@ function createFallbackWeather(kec) {
       temperature_2m: baseTemp,
       relative_humidity_2m: elev > 760 ? 78 : 71,
       precipitation: 0,
-      weather_code: 2,
+      weather_code: elev > 780 ? 2 : 1,
       wind_speed_10m: 6.5
     },
     hourly: {
@@ -156,7 +153,8 @@ async function fetchAllBandungWeather() {
 
 function describeSky(code) {
   if (code === 0) return '☀️ Cerah';
-  if (code <= 2) return '⛅ Cerah Berawan';
+  if (code === 1) return '🌤️ Cerah Berawan';
+  if (code === 2) return '⛅ Berawan Sebagian';
   if (code === 3) return '☁️ Mendung';
   if (code >= 45 && code <= 48) return '🌫️ Berkabut';
   if (code >= 51 && code <= 57) return '🌦️ Gerimis';
@@ -181,14 +179,17 @@ function getCurrentHourIndex(timeArray) {
   }
 }
 
+// Evaluasi Status Cuaca Gabungan: Curah Hujan + Kondisi Langit (weather_code)
 function getWeatherStatus(kec) {
   const w = weatherById[kec.id] || createFallbackWeather(kec);
   const rain = (w.current && typeof w.current.precipitation === 'number') ? w.current.precipitation : 0;
+  const code = (w.current && typeof w.current.weather_code === 'number') ? w.current.weather_code : 1;
   const hourlyProb = (w.hourly && Array.isArray(w.hourly.precipitation_probability)) ? w.hourly.precipitation_probability : [];
   const startIdx = getCurrentHourIndex(w.hourly && w.hourly.time);
   const sliceProb = hourlyProb.slice(startIdx, startIdx + 6);
   const prob = sliceProb.length ? Math.max(...sliceProb) : 10;
 
+  // 1. Siaga Genangan (Hujan lebat atau hujan di dataran rendah)
   if (rain >= 4 || (rain >= 1.5 && (kec.elevation || 700) < 690)) {
     return {
       level: 'SIAGA GENANGAN',
@@ -199,30 +200,47 @@ function getWeatherStatus(kec) {
       advice: `Curah hujan tinggi di wilayah ${kec.name} (${kec.elevation} mdpl). Waspadai potensi genangan di sekitar ${kec.hotspot}.`
     };
   }
-  if (rain > 0.2 || prob >= 45) {
+
+  // 2. Waspada Hujan (Gerimis/hujan aktual atau peluang hujan >= 50%)
+  if (rain > 0.1 || code >= 51 || prob >= 50) {
     return {
       level: 'WASPADA HUJAN',
-      code: 'warn',
+      code: 'rain',
       color: '#f59e0b',
       pillBg: '#fef3c7',
       pillColor: '#b45309',
-      advice: `Wilayah ${kec.name} berpotensi hujan ringan hingga sedang (peluang ${prob}%). Siapkan jas hujan bila melintasi ${kec.hotspot}.`
+      advice: `Wilayah ${kec.name} terpantau ${describeSky(code).toLowerCase()} (peluang hujan ${prob}%). Siapkan payung/jas hujan bila melintasi ${kec.hotspot}.`
     };
   }
+
+  // 3. Berawan / Mendung (Tidak hujan, tapi langit tertutup awan / kabut)
+  if (code >= 2 && code <= 48) {
+    return {
+      level: 'BERAWAN / TEDUH',
+      code: 'cloudy',
+      color: '#0ea5e9',
+      pillBg: '#e0f2fe',
+      pillColor: '#0369a1',
+      advice: `Langit di ${kec.name} (${kec.elevation} mdpl) dalam kondisi ${describeSky(code).toLowerCase()} tanpa hujan. Nyaman untuk beraktivitas di luar ruangan.`
+    };
+  }
+
+  // 4. Cerah / Kondusif (Langit cerah code 0 atau 1)
   return {
-    level: 'AMAN / KONDUSIF',
-    code: 'safe',
+    level: 'CERAH / KONDUSIF',
+    code: 'sunny',
     color: '#10b981',
     pillBg: '#d1fae5',
     pillColor: '#047857',
-    advice: `Cuaca di wilayah ${kec.name} (${kec.elevation} mdpl) terpantau kondusif. Aktivitas luar ruang dan lalu lintas aman.`
+    advice: `Cuaca di wilayah ${kec.name} (${kec.elevation} mdpl) terpantau cerah dan kondusif. Jarak pandang dan lalu lintas di sekitar ${kec.hotspot} aman.`
   };
 }
 
 function matchesActiveFilter(statusCode) {
   if (activeStatusFilter === 'all') return true;
-  if (activeStatusFilter === 'rain') return statusCode === 'warn' || statusCode === 'alert';
-  if (activeStatusFilter === 'safe') return statusCode === 'safe';
+  if (activeStatusFilter === 'sunny') return statusCode === 'sunny';
+  if (activeStatusFilter === 'cloudy') return statusCode === 'cloudy';
+  if (activeStatusFilter === 'rain') return statusCode === 'rain' || statusCode === 'alert';
   return true;
 }
 
