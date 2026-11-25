@@ -19,32 +19,25 @@
       overflow: hidden;
     }
 
-    /* Header Terang, Bersih & Humanis */
+    /* Header Terang & Bersih */
     header {
       position: fixed; top: 0; left: 0; right: 0; height: 64px;
-      background: rgba(255, 255, 255, 0.94);
+      background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(14px);
       border-bottom: 1px solid rgba(14, 165, 233, 0.18);
       box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
       display: flex; align-items: center; justify-content: space-between;
-      padding: 0 22px; z-index: 1000; gap: 12px;
+      padding: 0 20px; z-index: 1000; gap: 12px;
     }
-    .brand { display: flex; align-items: center; gap: 12px; }
-    
-    /* Brand Logo / Avatar Baru */
+    .brand { display: flex; align-items: center; gap: 11px; flex-shrink: 0; }
     .brand-icon {
       width: 40px; height: 40px; border-radius: 11px;
-      background: #e6f4ea;
+      background: #f1f5f9;
+      border: 1.5px solid #cbd5e1;
       display: flex; align-items: center; justify-content: center;
-      border: 1.5px solid #10b981;
-      overflow: hidden;
-      box-shadow: 0 3px 8px rgba(16, 185, 129, 0.15);
-      shrink: 0;
+      flex-shrink: 0;
     }
-    .brand-icon img {
-      width: 100%; height: 100%; object-fit: cover;
-    }
-    .brand h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; color: #0f172a; line-height: 1.2; }
+    .brand h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; color: #0f172a; line-height: 1.15; }
     .brand h1 span { color: #0284c7; }
     .brand p { font-size: 11px; color: #64748b; }
 
@@ -57,34 +50,35 @@
     .sum-item { display: inline-flex; align-items: center; gap: 5px; color: #334155; }
     .sum-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 
-    .right-bar { display: flex; align-items: center; gap: 14px; }
+    @media (max-width: 1080px) {
+      .city-summary, .profile-info { display: none; }
+    }
+
+    .right-bar { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
     .clock-box { text-align: right; }
     #live-clock { display: block; font-size: 12.5px; font-weight: 700; color: #0284c7; }
     #last-updated { display: block; font-size: 10.5px; color: #64748b; }
 
     .btn-refresh {
-      background: linear-gradient(135deg, #0ea5e9, #0284c7);
-      border: none; padding: 8px 14px; border-radius: 10px; color: #ffffff;
-      font-size: 12px; font-weight: 600; cursor: pointer;
-      box-shadow: 0 3px 10px rgba(2, 132, 199, 0.25); transition: 0.2s;
+      background: #0284c7;
+      border: none; padding: 8px 13px; border-radius: 10px; color: #ffffff;
+      font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s;
     }
-    .btn-refresh:hover { transform: translateY(-1px); box-shadow: 0 5px 14px rgba(2, 132, 199, 0.35); }
+    .btn-refresh:hover { background: #0369a1; }
 
-    /* Logo Profil Pengguna / Profil Dinas (Top Right) */
     .profile-badge {
       display: flex; align-items: center; gap: 8px;
-      padding-left: 8px; border-left: 1px solid #e2e8f0;
+      padding-left: 10px; border-left: 1px solid #e2e8f0;
     }
     .profile-avatar {
       width: 32px; height: 32px; border-radius: 50%;
-      background: #0284c7; color: #fff;
+      background: #0f172a; color: #f8fafc;
       display: flex; align-items: center; justify-content: center;
-      font-size: 12px; font-weight: 700; border: 1.5px solid #fff;
-      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+      font-size: 11px; font-weight: 700;
     }
-    .profile-info { text-align: left; line-height: 1.2; display: inline-block; }
-    .profile-name { font-size: 11px; font-weight: 700; color: #334155; }
-    .profile-role { font-size: 9px; color: #64748b; }
+    .profile-info { text-align: left; line-height: 1.2; }
+    .profile-name { font-size: 11px; font-weight: 700; color: #1e293b; }
+    .profile-role { font-size: 9.5px; color: #64748b; }
 
     /* Workspace & Map */
     #workspace { position: fixed; top: 64px; left: 0; right: 0; bottom: 0; }
@@ -97,11 +91,11 @@
 
     /* Glassmorphism Cerah */
     .glass {
-      background: rgba(255, 255, 255, 0.9);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       border: 1px solid rgba(255, 255, 255, 0.95);
-      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
     }
 
     /* Switcher Tema Peta & Reset View */
@@ -115,13 +109,13 @@
       padding: 6px 13px; border-radius: 8px; color: #475569; background: transparent; transition: 0.2s;
     }
     .pill-btn:hover { color: #0f172a; }
-    .pill-btn.active { background: #0284c7; color: #ffffff; box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25); }
+    .pill-btn.active { background: #0284c7; color: #ffffff; }
 
     .btn-reset-map {
       border: none; cursor: pointer; font-size: 11.5px; font-weight: 600;
       padding: 9px 13px; border-radius: 12px; color: #0369a1; transition: 0.2s;
     }
-    .btn-reset-map:hover { background: #ffffff; color: #0284c7; transform: translateY(-1px); }
+    .btn-reset-map:hover { background: #ffffff; color: #0284c7; }
 
     /* Label Nama Kecamatan di Peta */
     .kec-map-label {
@@ -145,7 +139,7 @@
 
     /* Panel Kanan */
     #detail-panel {
-      position: absolute; top: 14px; right: 16px; bottom: 16px; width: 395px; max-width: 92vw;
+      position: absolute; top: 14px; right: 16px; bottom: 16px; width: 390px; max-width: 92vw;
       z-index: 800; border-radius: 18px; display: flex; flex-direction: column; overflow: hidden;
     }
     .panel-head {
@@ -169,7 +163,7 @@
     .panel-body { padding: 14px 16px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 12px; }
     .card {
       padding: 13px; border-radius: 14px;
-      background: rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.88);
       border: 1px solid rgba(203, 213, 225, 0.65);
     }
     .status-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 10.5px; color: #64748b; font-weight: 700; letter-spacing: 0.3px; }
@@ -225,13 +219,18 @@
 
   <header>
     <div class="brand">
-      <div class="brand-icon">
-        <!-- Pasangkan logo/profile map TerraBandung (image_4.png) -->
-        <img src="logo.png" onerror="this.outerHTML='<svg width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'#10b981\' stroke-width=\'2.5\'><path d=\'M12 2a10 10 0 0 1 10 10v1a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3v-1A10 10 0 0 1 12 2z\'/><circle cx=\'12\' cy=\'11\' r=\'4\'/><path d=\'m12 21 4-4H8z\'/></svg>'" alt="Logo TerraBandung" />
+      <!-- Logo Vektor Minimalis TerraBandung -->
+      <div class="brand-icon" title="TerraBandung WebGIS">
+        <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
+          <path d="M7 14C7 9.03 11.03 5 16 5C20.97 5 25 9.03 25 14" stroke="#0284c7" stroke-width="2.2" stroke-linecap="round"/>
+          <circle cx="16" cy="9.5" r="2" fill="#0284c7"/>
+          <path d="M4 23L11 15L16.5 20.5L21.5 16L28 23H4Z" fill="#0f172a"/>
+          <path d="M9 23L16.5 16.5L24 23H9Z" fill="#10b981"/>
+        </svg>
       </div>
       <div>
         <h1>Terra<span>Bandung</span></h1>
-        <p>WebGIS Cuaca & Mitigasi Kota Bandung • Open-Meteo API</p>
+        <p>WebGIS Cuaca & Mitigasi Kota Bandung</p>
       </div>
     </div>
 
@@ -251,12 +250,11 @@
       </div>
       <button class="btn-refresh" onclick="refreshAllData()">↻ Perbarui</button>
 
-      <!-- Panel Akun / Organisasi Mitra untuk profile -->
       <div class="profile-badge">
         <div class="profile-avatar">BDG</div>
         <div class="profile-info">
-          <div class="profile-name">Operator SIG</div>
-          <div class="profile-role">DKP3 Kota Bandung</div>
+          <div class="profile-name">SIG Bandung</div>
+          <div class="profile-role">Pemantau Cuaca</div>
         </div>
       </div>
     </div>

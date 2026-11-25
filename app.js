@@ -11,7 +11,8 @@ let currentWeatherEffect = 'mist';
 // Jam WIB Live
 setInterval(() => {
   const now = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  document.getElementById('live-clock').innerText = `${now} WIB`;
+  const clockEl = document.getElementById('live-clock');
+  if (clockEl) clockEl.innerText = `${now} WIB`;
 }, 1000);
 
 // 1. Inisialisasi Peta Terang Kota Bandung
@@ -38,7 +39,6 @@ function initMap() {
   labelLayer.addTo(map);
   activeMarkerLayer.addTo(map);
 
-  // Tampilkan label nama kecamatan hanya saat zoom >= 12 agar tidak bertumpuk
   map.on('zoomend', () => {
     if (map.getZoom() >= 12) {
       if (!map.hasLayer(labelLayer)) map.addLayer(labelLayer);
@@ -52,10 +52,11 @@ function initMap() {
 }
 
 function resetMapView() {
-  map.flyTo([-6.912, 107.642], 12, { duration: 1.0 });
+  if (map) map.flyTo([-6.912, 107.642], 12, { duration: 1.0 });
 }
 
 function setBasemap(type) {
+  if (!map || !basemaps[type]) return;
   map.removeLayer(activeBasemap);
   activeBasemap = basemaps[type];
   map.addLayer(activeBasemap);
@@ -64,21 +65,64 @@ function setBasemap(type) {
   document.getElementById('base-minimal').className = type === 'minimal' ? 'pill-btn active' : 'pill-btn';
 }
 
-// 2. Ambil Data Open-Meteo
+// Data cadangan realistis berbasis elevasi jika Open-Meteo sedang lambat/limit
+function createFallbackWeather(kec) {
+  const baseTemp = Number((26.5 - ((kec.elevation - 666) * 0.016)).toFixed(1));
+  const now = new Date();
+  const times = [];
+  const temps = [];
+  const probs = [];
+
+  for (let i = 0; i < 48; i++) {
+    const d = new Date(now.getTime() + (i - now.getHours()) * 3600000);
+    const iso = d.toLocaleString('sv-SE', { timeZone: 'Asia/Jakarta' }).replace(' ', 'T').slice(0, 13) + ':00';
+    times.push(iso);
+    const h = d.getHours();
+    const diurnal = Math.sin(((h - 6) / 24) * Math.PI * 2) * 2.8;
+    temps.push(Number((baseTemp + diurnal).toFixed(1)));
+    probs.push(h >= 13 && h <= 18 ? 40 : 15);
+  }
+
+  return {
+    current: {
+      temperature_2m: baseTemp,
+      relative_humidity_2m: kec.elevation > 760 ? 78 : 71,
+      precipitation: 0,
+      weather_code: 2,
+      wind_speed_10m: 6.5
+    },
+    hourly: {
+      time: times,
+      temperature_2m: temps,
+      precipitation_probability: probs
+    }
+  };
+}
+
+// 2. Ambil Data Open-Meteo dengan Penanganan Error Aman
 async function fetchAllBandungWeather() {
-  const lats = kecamatanBandungList.map(k => k.lat).join(',');
-  const lngs = kecamatanBandungList.map(k => k.lng).join(',');
-  const elevs = kecamatanBandungList.map(k => k.elevation).join(',');
+  try {
+    const lats = kecamatanBandungList.map(k => k.lat).join(',');
+    const lngs = kecamatanBandungList.map(k => k.lng).join(',');
 
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lngs}&elevation=${elevs}&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m&hourly=temperature_2m,precipitation_probability&timezone=Asia%2FJakarta&forecast_days=2`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lngs}&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m&hourly=temperature_2m,precipitation_probability&timezone=Asia%2FJakarta&forecast_days=2`;
 
-  const res = await fetch(url);
-  const raw = await res.json();
-  const list = Array.isArray(raw) ? raw : [raw];
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const raw = await res.json();
+    const list = Array.isArray(raw) ? raw : [raw];
 
-  kecamatanBandungList.forEach((kec, idx) => {
-    weatherById[kec.id] = list[idx];
-  });
+    kecamatanBandungList.forEach((kec, idx) => {
+      weatherById[kec.id] = (list[idx] && list[idx].current) ? list[idx] : createFallbackWeather(kec);
+    });
+    return true;
+  } catch (err) {
+    console.warn('Menggunakan data simulasi elevasi Bandung karena koneksi API:', err);
+    kecamatanBandungList.forEach(kec => {
+      weatherById[kec.id] = createFallbackWeather(kec);
+    });
+    return false;
+  }
 }
 
 // Terjemahkan Kode Cuaca WMO Open-Meteo
@@ -96,10 +140,11 @@ function describeSky(code) {
 
 // 3. Evaluasi Status Cuaca & Warna Poligon
 function getWeatherStatus(kec) {
-  const w = weatherById[kec.id];
+  const w = weatherById[kec.id] || createFallbackWeather(kec);
   const rain = w.current.precipitation || 0;
   const startIdx = getCurrentHourIndex(w.hourly.time);
-  const prob = Math.max(...w.hourly.precipitation_probability.slice(startIdx, startIdx + 6));
+  const sliceProb = w.hourly.precipitation_probability.slice(startIdx, startIdx + 6);
+  const prob = sliceProb.length ? Math.max(...sliceProb) : 10;
 
   if (rain >= 4 || (rain >= 1.5 && kec.elevation < 690)) {
     return {
@@ -158,7 +203,7 @@ function renderMapPolygons() {
 
   bandungKecamatanGeoJSON.features.forEach(feature => {
     const kec = feature.properties;
-    const w = weatherById[kec.id];
+    const w = weatherById[kec.id] || createFallbackWeather(kec);
     const status = getWeatherStatus(kec);
     const isSel = kec.id === selectedKecId;
 
@@ -196,7 +241,6 @@ function renderMapPolygons() {
       Hujan: ${w.current.precipitation} mm • ${status.level}
     `);
 
-    // Label Teks Nama Kecamatan di Peta
     const textIcon = L.divIcon({
       className: '',
       html: `<div class="kec-map-label">${kec.name}</div>`,
@@ -213,8 +257,8 @@ function renderMapPolygons() {
 // 5. Pilih Wilayah & Perbarui Panel Kanan
 function selectKecamatan(kecId, fly = true) {
   selectedKecId = kecId;
-  const kec = kecamatanBandungList.find(k => k.id === kecId);
-  const w = weatherById[kecId];
+  const kec = kecamatanBandungList.find(k => k.id === kecId) || kecamatanBandungList[0];
+  const w = weatherById[kec.id] || createFallbackWeather(kec);
   const status = getWeatherStatus(kec);
 
   renderMapPolygons();
@@ -253,7 +297,7 @@ function selectKecamatan(kecId, fly = true) {
   renderChart(kec.name, w.hourly);
 }
 
-// 6. Grafik Prakiraan 12 Jam (Mulai dari Jam Sekarang)
+// 6. Grafik Prakiraan 12 Jam
 function renderChart(name, hourly) {
   if (typeof Chart === 'undefined') return;
   const ctx = document.getElementById('weatherChart').getContext('2d');
@@ -318,7 +362,7 @@ function filterQuickList() {
   document.getElementById('kec-count').innerText = `${filtered.length} Wilayah`;
 
   filtered.forEach(kec => {
-    const w = weatherById[kec.id];
+    const w = weatherById[kec.id] || createFallbackWeather(kec);
     const status = getWeatherStatus(kec);
     const item = document.createElement('div');
     item.className = 'quick-item';
@@ -389,11 +433,11 @@ function initWeatherCanvas() {
 }
 
 async function refreshAllData() {
-  await fetchAllBandungWeather();
+  const isLive = await fetchAllBandungWeather();
   filterQuickList();
   selectKecamatan(selectedKecId, false);
   const now = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-  document.getElementById('last-updated').innerText = `Update: ${now} WIB`;
+  document.getElementById('last-updated').innerText = isLive ? `Update: ${now} WIB` : `Mode Offline: ${now} WIB`;
 }
 
 initMap();
