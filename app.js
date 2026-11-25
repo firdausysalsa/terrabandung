@@ -8,6 +8,10 @@ let chartInstance = null;
 let selectedKecId = 'cidadap';
 let activeStatusFilter = 'all';
 
+const fallbackKecList = (typeof kecamatanBandungList !== 'undefined' && Array.isArray(kecamatanBandungList))
+  ? kecamatanBandungList
+  : [];
+
 // Jam WIB Live
 setInterval(() => {
   const now = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -47,18 +51,25 @@ function initMap() {
     }
   });
 
+  // Render awal langsung agar tidak pernah tampil 0 Wilayah saat memuat API
+  fallbackKecList.forEach(kec => {
+    weatherById[kec.id] = createFallbackWeather(kec);
+  });
+  updateCityHighlights();
+  filterQuickList();
+  renderMapPolygons();
+
   refreshAllData();
 }
 
-// Pilih satu kecamatan secara acak
 function pickRandomKecamatan() {
-  const candidates = kecamatanBandungList.filter(k => k.id !== selectedKecId);
-  const pool = candidates.length ? candidates : kecamatanBandungList;
+  if (!fallbackKecList.length) return;
+  const candidates = fallbackKecList.filter(k => k.id !== selectedKecId);
+  const pool = candidates.length ? candidates : fallbackKecList;
   const chosen = pool[Math.floor(Math.random() * pool.length)];
   selectKecamatan(chosen.id, true);
 }
 
-// Filter tampilan poligon berdasarkan kondisi cuaca
 function setStatusFilter(filterType) {
   activeStatusFilter = filterType;
   ['all', 'rain', 'safe'].forEach(t => {
@@ -79,9 +90,9 @@ function setBasemap(type) {
   document.getElementById('base-minimal').className = type === 'minimal' ? 'pill-btn active' : 'pill-btn';
 }
 
-// Data cadangan berbasis elevasi jika jaringan lambat
 function createFallbackWeather(kec) {
-  const baseTemp = Number((26.5 - ((kec.elevation - 666) * 0.016)).toFixed(1));
+  const elev = kec.elevation || 700;
+  const baseTemp = Number((26.5 - ((elev - 666) * 0.016)).toFixed(1));
   const now = new Date();
   const times = [];
   const temps = [];
@@ -100,7 +111,7 @@ function createFallbackWeather(kec) {
   return {
     current: {
       temperature_2m: baseTemp,
-      relative_humidity_2m: kec.elevation > 760 ? 78 : 71,
+      relative_humidity_2m: elev > 760 ? 78 : 71,
       precipitation: 0,
       weather_code: 2,
       wind_speed_10m: 6.5
@@ -113,11 +124,11 @@ function createFallbackWeather(kec) {
   };
 }
 
-// 2. Ambil Data Open-Meteo
 async function fetchAllBandungWeather() {
+  if (!fallbackKecList.length) return false;
   try {
-    const lats = kecamatanBandungList.map(k => k.lat).join(',');
-    const lngs = kecamatanBandungList.map(k => k.lng).join(',');
+    const lats = fallbackKecList.map(k => k.lat).join(',');
+    const lngs = fallbackKecList.map(k => k.lng).join(',');
 
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lngs}&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m&hourly=temperature_2m,precipitation_probability&timezone=Asia%2FJakarta&forecast_days=2`;
 
@@ -126,12 +137,17 @@ async function fetchAllBandungWeather() {
     const raw = await res.json();
     const list = Array.isArray(raw) ? raw : [raw];
 
-    kecamatanBandungList.forEach((kec, idx) => {
-      weatherById[kec.id] = (list[idx] && list[idx].current) ? list[idx] : createFallbackWeather(kec);
+    fallbackKecList.forEach((kec, idx) => {
+      const item = list[idx];
+      if (item && item.current && item.hourly && Array.isArray(item.hourly.time)) {
+        weatherById[kec.id] = item;
+      } else {
+        weatherById[kec.id] = createFallbackWeather(kec);
+      }
     });
     return true;
   } catch (err) {
-    kecamatanBandungList.forEach(kec => {
+    fallbackKecList.forEach(kec => {
       weatherById[kec.id] = createFallbackWeather(kec);
     });
     return false;
@@ -150,15 +166,30 @@ function describeSky(code) {
   return '⛅ Berawan';
 }
 
-// 3. Evaluasi Status Cuaca & Warna Poligon
+function getCurrentHourIndex(timeArray) {
+  if (!Array.isArray(timeArray) || !timeArray.length) return 0;
+  try {
+    const jakartaNow = new Intl.DateTimeFormat('sv-SE', {
+      timeZone: 'Asia/Jakarta',
+      year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit'
+    }).format(new Date()).replace(' ', 'T');
+
+    const idx = timeArray.findIndex(t => typeof t === 'string' && t.startsWith(jakartaNow));
+    return idx >= 0 ? idx : 0;
+  } catch (e) {
+    return 0;
+  }
+}
+
 function getWeatherStatus(kec) {
   const w = weatherById[kec.id] || createFallbackWeather(kec);
-  const rain = w.current.precipitation || 0;
-  const startIdx = getCurrentHourIndex(w.hourly.time);
-  const sliceProb = w.hourly.precipitation_probability.slice(startIdx, startIdx + 6);
+  const rain = (w.current && typeof w.current.precipitation === 'number') ? w.current.precipitation : 0;
+  const hourlyProb = (w.hourly && Array.isArray(w.hourly.precipitation_probability)) ? w.hourly.precipitation_probability : [];
+  const startIdx = getCurrentHourIndex(w.hourly && w.hourly.time);
+  const sliceProb = hourlyProb.slice(startIdx, startIdx + 6);
   const prob = sliceProb.length ? Math.max(...sliceProb) : 10;
 
-  if (rain >= 4 || (rain >= 1.5 && kec.elevation < 690)) {
+  if (rain >= 4 || (rain >= 1.5 && (kec.elevation || 700) < 690)) {
     return {
       level: 'SIAGA GENANGAN',
       code: 'alert',
@@ -199,33 +230,21 @@ function updateCityHighlights() {
   let coldest = null;
   let warmest = null;
 
-  kecamatanBandungList.forEach(kec => {
+  fallbackKecList.forEach(kec => {
     const w = weatherById[kec.id] || createFallbackWeather(kec);
-    const t = w.current.temperature_2m;
+    const t = w.current ? w.current.temperature_2m : 24;
     if (!coldest || t < coldest.temp) coldest = { name: kec.name, temp: t };
     if (!warmest || t > warmest.temp) warmest = { name: kec.name, temp: t };
   });
 
-  if (coldest) document.getElementById('hl-cool').innerHTML = `Terdingin: <strong>${coldest.name} (${coldest.temp}°C)</strong>`;
-  if (warmest) document.getElementById('hl-warm').innerHTML = `Terhangat: <strong>${warmest.name} (${warmest.temp}°C)</strong>`;
+  const coolEl = document.getElementById('hl-cool');
+  const warmEl = document.getElementById('hl-warm');
+  if (coldest && coolEl) coolEl.innerHTML = `Terdingin: <strong>${coldest.name} (${coldest.temp}°C)</strong>`;
+  if (warmest && warmEl) warmEl.innerHTML = `Terhangat: <strong>${warmest.name} (${warmest.temp}°C)</strong>`;
 }
 
-function getCurrentHourIndex(timeArray) {
-  try {
-    const jakartaNow = new Intl.DateTimeFormat('sv-SE', {
-      timeZone: 'Asia/Jakarta',
-      year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit'
-    }).format(new Date()).replace(' ', 'T');
-
-    const idx = timeArray.findIndex(t => t.startsWith(jakartaNow));
-    return idx >= 0 ? idx : 0;
-  } catch (e) {
-    return 0;
-  }
-}
-
-// 4. Render Poligon & Label Nama Wilayah
 function renderMapPolygons() {
+  if (typeof bandungKecamatanGeoJSON === 'undefined' || !bandungKecamatanGeoJSON.features) return;
   polygonLayer.clearLayers();
   labelLayer.clearLayers();
 
@@ -275,10 +294,10 @@ function renderMapPolygons() {
   });
 }
 
-// 5. Pilih Wilayah & Perbarui Panel Kanan
 function selectKecamatan(kecId, fly = true) {
+  if (!fallbackKecList.length) return;
   selectedKecId = kecId;
-  const kec = kecamatanBandungList.find(k => k.id === kecId) || kecamatanBandungList[0];
+  const kec = fallbackKecList.find(k => k.id === kecId) || fallbackKecList[0];
   const w = weatherById[kec.id] || createFallbackWeather(kec);
   const status = getWeatherStatus(kec);
 
@@ -292,11 +311,11 @@ function selectKecamatan(kecId, fly = true) {
   });
   L.marker([kec.lat, kec.lng], { icon: pinIcon, interactive: false }).addTo(activeMarkerLayer);
 
-  if (fly) {
+  if (fly && map) {
     map.flyTo([kec.lat, kec.lng], 13.5, { duration: 0.9 });
   }
 
-  document.getElementById('panel-region-badge').innerText = `KOTA BANDUNG • WILAYAH ${kec.wilayah.toUpperCase()}`;
+  document.getElementById('panel-region-badge').innerText = `KOTA BANDUNG • WILAYAH ${String(kec.wilayah || '').toUpperCase()}`;
   document.getElementById('panel-elev').innerText = `${kec.elevation} mdpl`;
   document.getElementById('panel-title').innerText = `Kec. ${kec.name}`;
   document.getElementById('panel-sky').innerText = describeSky(w.current.weather_code);
@@ -316,17 +335,18 @@ function selectKecamatan(kecId, fly = true) {
   renderChart(kec.name, w.hourly);
 }
 
-// 6. Grafik Prakiraan 12 Jam
 function renderChart(name, hourly) {
-  if (typeof Chart === 'undefined') return;
-  const ctx = document.getElementById('weatherChart').getContext('2d');
+  if (typeof Chart === 'undefined' || !hourly || !Array.isArray(hourly.time)) return;
+  const canvasEl = document.getElementById('weatherChart');
+  if (!canvasEl) return;
+  const ctx = canvasEl.getContext('2d');
   if (chartInstance) chartInstance.destroy();
 
   const startIdx = getCurrentHourIndex(hourly.time);
   const endIdx = startIdx + 12;
 
-  document.getElementById('chart-title').innerText = `PRAKIRAAN 12 JAM — ${name.toUpperCase()}`;
-  const labels = hourly.time.slice(startIdx, endIdx).map(t => t.split('T')[1]);
+  document.getElementById('chart-title').innerText = `PRAKIRAAN 12 JAM — ${String(name).toUpperCase()}`;
+  const labels = hourly.time.slice(startIdx, endIdx).map(t => (typeof t === 'string' && t.includes('T')) ? t.split('T')[1] : t);
 
   chartInstance = new Chart(ctx, {
     type: 'line',
@@ -335,7 +355,7 @@ function renderChart(name, hourly) {
       datasets: [
         {
           label: 'Suhu (°C)',
-          data: hourly.temperature_2m.slice(startIdx, endIdx),
+          data: (hourly.temperature_2m || []).slice(startIdx, endIdx),
           borderColor: '#059669',
           backgroundColor: 'rgba(16, 185, 129, 0.12)',
           yAxisID: 'y',
@@ -346,7 +366,7 @@ function renderChart(name, hourly) {
         },
         {
           label: 'Peluang Hujan (%)',
-          data: hourly.precipitation_probability.slice(startIdx, endIdx),
+          data: (hourly.precipitation_probability || []).slice(startIdx, endIdx),
           borderColor: '#0284c7',
           yAxisID: 'y1',
           borderWidth: 2,
@@ -368,19 +388,23 @@ function renderChart(name, hourly) {
   });
 }
 
-// 7. Daftar Pencarian Wilayah
 function filterQuickList() {
-  const query = document.getElementById('search-kec').value.toLowerCase();
+  const inputEl = document.getElementById('search-kec');
   const listEl = document.getElementById('quick-list');
+  const countEl = document.getElementById('kec-count');
+  if (!listEl) return;
+
+  const query = inputEl ? inputEl.value.toLowerCase().trim() : '';
   listEl.innerHTML = '';
 
-  const filtered = kecamatanBandungList.filter(k => {
+  const filtered = fallbackKecList.filter(k => {
     const status = getWeatherStatus(k);
-    const matchText = k.name.toLowerCase().includes(query) || k.hotspot.toLowerCase().includes(query);
-    return matchText && matchesActiveFilter(status.code);
+    const nameMatch = String(k.name || '').toLowerCase().includes(query);
+    const spotMatch = String(k.hotspot || '').toLowerCase().includes(query);
+    return (nameMatch || spotMatch) && matchesActiveFilter(status.code);
   });
 
-  document.getElementById('kec-count').innerText = `${filtered.length} Wilayah`;
+  if (countEl) countEl.innerText = `${filtered.length} Wilayah`;
 
   filtered.forEach(kec => {
     const w = weatherById[kec.id] || createFallbackWeather(kec);
@@ -405,7 +429,8 @@ async function refreshAllData() {
   filterQuickList();
   selectKecamatan(selectedKecId, false);
   const now = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-  document.getElementById('last-updated').innerText = isLive ? `Update: ${now} WIB` : `Data Elevasi: ${now} WIB`;
+  const updEl = document.getElementById('last-updated');
+  if (updEl) updEl.innerText = isLive ? `Update: ${now} WIB` : `Data Elevasi: ${now} WIB`;
 }
 
 initMap();
